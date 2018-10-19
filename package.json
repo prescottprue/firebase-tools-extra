@@ -1,0 +1,45 @@
+{
+  "name": "firebase-tools-extra",
+  "version": "0.0.1",
+  "description": "Extra methods for firebase-tools which support using a service account.",
+  "main": "lib/index.js",
+  "module": "es/index.js",
+  "jsnext:main": "es/index.js",
+  "unpkg": "dist/firebaseToolsExtra.min.js",
+  "scripts": {
+    "clean": "rimraf lib dist",
+    "build:commonjs": "cross-env BABEL_ENV=commonjs babel src --out-dir lib",
+    "build:es": "cross-env BABEL_ENV=es babel src --out-dir es",
+    "build": "npm run build:commonjs && npm run build:es",
+    "watch": "npm run build:commonjs -- --watch",
+    "lint": "eslint src test",
+    "lint:fix": "npm run lint -- --fix",
+    "postinstall": "npm run build",
+    "preversion": "npm run build",
+    "prepare": "npm run build"
+  },
+  "keywords": [
+    "firebase-tools",
+    "firebase",
+    "cli"
+  ],
+  "dependencies": {
+    "firebase-admin": "^6.0.0",
+    "lodash": "^4.17.11"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-eslint": "^8.0.1",
+    "babel-loader": "^7.1.2",
+    "babel-plugin-add-module-exports": "^0.2.1",
+    "babel-plugin-lodash": "^3.3.4",
+    "babel-preset-env": "^1.7.0",
+    "cross-env": "^5.0.5",
+    "eslint": "^3.15.0",
+    "eslint-config-airbnb": "^14.1.0",
+    "eslint-plugin-import": "^2.7.0",
+    "eslint-plugin-jsx-a11y": "^3.0.2",
+    "eslint-plugin-react": "^6.9.0",
+    "rimraf": "^2.6.2"
+  }
+}
