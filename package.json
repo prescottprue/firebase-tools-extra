@@ -1,6 +1,6 @@
 {
   "name": "firebase-tools-extra",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Extra methods for firebase-tools which support using a service account.",
   "main": "lib/index.js",
   "module": "es/index.js",
@@ -13,9 +13,8 @@
     "watch": "npm run build:commonjs -- --watch",
     "lint": "eslint src test",
     "lint:fix": "npm run lint -- --fix",
-    "postinstall": "npm run build",
-    "preversion": "npm run build",
-    "prepare": "npm run build"
+    "prepare": "npm run clean && npm run build",
+    "prepush": "npm run lint"
   },
   "keywords": [
     "firebase-tools",
@@ -38,6 +37,7 @@
     "eslint-plugin-import": "^2.7.0",
     "eslint-plugin-jsx-a11y": "^3.0.2",
     "eslint-plugin-react": "^6.9.0",
+    "husky": "^1.1.2",
     "rimraf": "^2.6.2"
   },
   "license": "MIT",
