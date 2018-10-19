@@ -56,7 +56,7 @@ export default function firestoreAction(action = 'set', actionPath, thirdArg, wi
     });
   }
   catch (err) {
-    console.log(`Error with ${action} at path "${actionPath}": `, err);
+    console.log(`Error with ${action} at path "${actionPath}": `, err); // eslint-disable-line no-console
     throw err;
   }
 }
