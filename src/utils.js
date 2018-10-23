@@ -7,12 +7,6 @@ import {
   FIREBASE_TOOLS_YES_ARGUMENT
 } from './constants';
 
-const prefixesByCiEnv = {
-  master: 'INT_',
-  staging: 'STAGE_',
-  production: 'PROD_'
-};
-
 
 /**
  * Create data object with values for each document with keys being doc.id.
@@ -52,17 +46,17 @@ export function parseFixturePath(unparsed) {
 
 
 function getEnvironmentSlug() {
-  return process.env.CI_ENVIRONMENT_SLUG || 'staging';
+  return process.env.CI_ENVIRONMENT_SLUG || 'stage';
 }
 
 /**
  * Get prefix for current environment based on environment vars available
- * within CI. Falls back to staging (i.e. STAGE)
+ * within CI. Falls back to staging (i.e. STAGE_)
  * @return {String} Environment prefix string
  */
 function getEnvPrefix() {
   const envSlug = getEnvironmentSlug();
-  return prefixesByCiEnv[envSlug];
+  return `${envSlug.toUpperCase()}_`;
 }
 
 function getServiceAccountPath() {
