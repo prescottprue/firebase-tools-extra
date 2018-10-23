@@ -3,7 +3,7 @@
  * To use add require('../cmds/deploy.js')(program) to your commander.js based node executable before program.parse
  */
 
-const createTestEnvFile = require('../lib/index').createTestEnvFile;
+const firestoreAction = require('../lib/commands/firestore').default;
 const chalk = require('chalk');
 
 
@@ -23,7 +23,7 @@ module.exports = function (program) {
       'Build configuration file containing a token for authorizing a firebase instance'
     )
     .action((directory, options) =>
-      createTestEnvFile(program.args[0], directory, options)
+      firestoreAction(program.args[0], directory, options)
         .then(() => process.exit(0))
         .catch((err) => {
           console.log(chalk.red(`Error creating test env file:\n${err.message}`)); // eslint-disable-line no-console

@@ -1,4 +1,3 @@
-bin
 examples
 test
 coverage
@@ -10,5 +9,4 @@ coverage
 yarn.lock
 .travis.yml
 CHANGELOG.md
-.codeclimate.yml
-PATRONS.md
+src

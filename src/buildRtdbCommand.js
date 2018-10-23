@@ -1,6 +1,6 @@
 import { isObject } from 'lodash';
 import { addDefaultArgs, getArgsString } from './utils';
-import { FIREBASE_TOOLS_BASE_COMMAND, DEFAULT_TEST_FOLDER_PATH, DEFAULT_FIXTURE_FOLDER_PATH } from './constants';
+import { FIREBASE_TOOLS_BASE_COMMAND } from './constants';
 
 /**
  * Build Command to run Real Time Database action. All commands call
@@ -27,8 +27,7 @@ export default function buildRtdbCommand(action, actionPath, fixturePath, opts =
       return `${FIREBASE_TOOLS_BASE_COMMAND} database:${action} /${actionPath}${getDataArgsStr}`;
     }
     default: {
-      const fullPathToFixture = `${DEFAULT_TEST_FOLDER_PATH}/${DEFAULT_FIXTURE_FOLDER_PATH}/${fixturePath}`;
-      return `${FIREBASE_TOOLS_BASE_COMMAND} database:${action} /${actionPath} ${fullPathToFixture}${argsStr}`;
+      return `${FIREBASE_TOOLS_BASE_COMMAND} database:${action} /${actionPath} ${fixturePath}${argsStr}`;
     }
   }
 }

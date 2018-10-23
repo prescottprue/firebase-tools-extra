@@ -4,9 +4,9 @@ import path from 'path';
 import {
   DEFAULT_BASE_PATH,
   DEFAULT_TEST_FOLDER_PATH,
+  FALLBACK_TEST_FOLDER_PATH,
   FIREBASE_TOOLS_YES_ARGUMENT
 } from './constants';
-
 
 /**
  * Create data object with values for each document with keys being doc.id.
@@ -54,7 +54,7 @@ function getEnvironmentSlug() {
  * within CI. Falls back to staging (i.e. STAGE_)
  * @return {String} Environment prefix string
  */
-function getEnvPrefix() {
+export function getEnvPrefix() {
   const envSlug = getEnvironmentSlug();
   return `${envSlug.toUpperCase()}_`;
 }
@@ -78,8 +78,15 @@ export function envVarBasedOnCIEnv(varNameRoot) {
   // Config file used for environment (local, containers)
   if (!process.env.CI && !process.env.CI_ENVIRONMENT_SLUG) {
     const localTestConfigPath = path.join(DEFAULT_BASE_PATH, DEFAULT_TEST_FOLDER_PATH, 'config.json');
-    const configObj = require(localTestConfigPath); // eslint-disable-line global-require, import/no-dynamic-require
-    return configObj[combined] || configObj[varNameRoot];
+    if (fs.existsSync(localTestConfigPath)) {
+      const configObj = require(localTestConfigPath); // eslint-disable-line global-require, import/no-dynamic-require
+      return configObj[combined] || configObj[varNameRoot];
+    }
+    const fallbackConfigPath = path.join(DEFAULT_BASE_PATH, FALLBACK_TEST_FOLDER_PATH, 'config.json');
+    if (fs.existsSync(fallbackConfigPath)) {
+      const configObj = require(fallbackConfigPath); // eslint-disable-line global-require, import/no-dynamic-require
+      return configObj[combined] || configObj[varNameRoot];
+    }
   }
 
   // CI Environment (environment variables loaded directly)
