@@ -7,6 +7,6 @@ export const DEFAULT_CONFIG_FILE_PATH = 'config.json';
 // falling back to the globally installed instance)
 export const FIREBASE_TOOLS_BASE_COMMAND = 'npx firebase';
 // Path to Firebase Extra Command Line tool (wrapper for firebase-tools)
-export const FIREBASE_EXTRA_PATH = '$(npm bin)/firebase-tools-extra';
+export const FIREBASE_EXTRA_PATH = '$(npm bin)/firebase-extra';
 export const FIREBASE_TOOLS_YES_ARGUMENT = '-y';
 export const DEFAULT_BASE_PATH = process.cwd();

@@ -1,6 +1,4 @@
-import buildFirestoreCommand from './buildFirestoreCommand';
-import buildRtdbCommand from './buildRtdbCommand';
+import firestoreAction from './commands/firestore';
 
-export { buildFirestoreCommand, buildRtdbCommand };
 
-export default { buildFirestoreCommand, buildRtdbCommand };
+export default firestoreAction;

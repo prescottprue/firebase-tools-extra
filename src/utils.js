@@ -1,6 +1,7 @@
+import * as admin from 'firebase-admin';
 import { isString, get } from 'lodash';
-import fs from 'fs';
 import path from 'path';
+import fs from 'fs';
 import {
   DEFAULT_BASE_PATH,
   DEFAULT_TEST_FOLDER_PATH,
@@ -74,19 +75,17 @@ function getServiceAccountPath() {
 export function envVarBasedOnCIEnv(varNameRoot) {
   const prefix = getEnvPrefix();
   const combined = `${prefix}${varNameRoot}`;
+  const localTestConfigPath = path.join(DEFAULT_BASE_PATH, DEFAULT_TEST_FOLDER_PATH, 'config.json');
+  console.log('env var based on ci env in firebase-tools-extra');
 
-  // Config file used for environment (local, containers)
-  if (!process.env.CI && !process.env.CI_ENVIRONMENT_SLUG) {
-    const localTestConfigPath = path.join(DEFAULT_BASE_PATH, DEFAULT_TEST_FOLDER_PATH, 'config.json');
-    if (fs.existsSync(localTestConfigPath)) {
-      const configObj = require(localTestConfigPath); // eslint-disable-line global-require, import/no-dynamic-require
-      return configObj[combined] || configObj[varNameRoot];
-    }
-    const fallbackConfigPath = path.join(DEFAULT_BASE_PATH, FALLBACK_TEST_FOLDER_PATH, 'config.json');
-    if (fs.existsSync(fallbackConfigPath)) {
-      const configObj = require(fallbackConfigPath); // eslint-disable-line global-require, import/no-dynamic-require
-      return configObj[combined] || configObj[varNameRoot];
-    }
+  if (fs.existsSync(localTestConfigPath)) {
+    const configObj = require(localTestConfigPath); // eslint-disable-line global-require, import/no-dynamic-require
+    return configObj[combined] || configObj[varNameRoot];
+  }
+  const fallbackConfigPath = path.join(DEFAULT_BASE_PATH, FALLBACK_TEST_FOLDER_PATH, 'config.json');
+  if (fs.existsSync(fallbackConfigPath)) {
+    const configObj = require(fallbackConfigPath); // eslint-disable-line global-require, import/no-dynamic-require
+    return configObj[combined] || configObj[varNameRoot];
   }
 
   // CI Environment (environment variables loaded directly)
@@ -133,6 +132,8 @@ function getParsedEnvVar(varNameRoot) {
  */
 function getServiceAccount() {
   const serviceAccountPath = getServiceAccountPath();
+  console.log('get service account in firebase-tools-extra');
+
   // Check for local service account file (Local dev)
   if (fs.existsSync(serviceAccountPath)) {
     return require(serviceAccountPath); // eslint-disable-line global-require, import/no-dynamic-require
@@ -159,7 +160,7 @@ let fbInstance;
  * serviceAccount.json or environment variables)
  * @return {Firebase} Initialized Firebase instance
  */
-export function initializeFirebase(newFbInstance) {
+export function initializeFirebase() {
   try {
     // Get service account from local file falling back to environment variables
     if (!fbInstance) {
@@ -171,8 +172,8 @@ export function initializeFirebase(newFbInstance) {
         throw new Error(missingProjectIdErr);
       }
       const cleanProjectId = projectId.replace('firebase-top-agent-int', 'top-agent-int');
-      fbInstance = newFbInstance.initializeApp({
-        credential: newFbInstance.credential.cert(serviceAccount),
+      fbInstance = admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount),
         databaseURL: `https://${cleanProjectId}.firebaseio.com`
       });
       fbInstance.firestore().settings({ timestampsInSnapshots: true });
