@@ -1,24 +1,62 @@
 #!/usr/bin/env node
-const program = require('commander');
+const yargs = require('yargs'); // eslint-disable-line import/no-extraneous-dependencies
+const firestoreAction = require('../lib').default;
+const drop = require('lodash/drop');
 
-const pkg = require('../package.json');
-
-program.version(pkg.version);
-
-require('../cmds')(program);
-
-program
-  .on('*', (name) => {
-    console.log(`'${name}' is not a known command. See 'firebase-extra --help':`);  // eslint-disable-line no-console
-    program.outputHelp();
+const commands = [
+  {
+    command: 'firestore [action] [actionPath] [fixturePath]',
+    describe: 'run action on Firebase using service account',
+    builder: (yargsInstance) => {
+      yargsInstance.positional('action', {
+        describe: 'action to run on Firestore',
+        default: 'set'
+      });
+      yargsInstance.positional('actionPath', {
+        describe: 'path of action to run on Firestore',
+        default: 'projects/test-project'
+      });
+      yargsInstance.positional('fixturePath', {
+        describe: 'path of fixture to use ',
+        default: 'fakeProject.json'
+      });
+    },
+    handler: (argv) => {
+      // Log if verbose option is passed
+      if (argv.verbose) {
+        console.info(
+          `firestore command on :${argv.action} at ${argv.actionPath}`
+        );
+      }
+      return argv;
+    }
+  }
+];
+(function runFirebaseExtra() {
+  // eslint-disable-line consistent-return
+  let currentArgs;
+  try {
+    // TODO: Replace with commandDir when moving config to a directory
+    for (const command in commands) {
+      // eslint-disable-line guard-for-in, no-restricted-syntax
+      currentArgs = yargs.command(command);
+    }
+    yargs.option('withMeta', {
+      alias: 'm',
+      default: false
+    });
+    /* eslint-disable no-unused-expressions */
+    const argv = currentArgs.option('verbose', {
+      alias: 'v',
+      default: false
+    }).argv;
+    return firestoreAction(argv, ...drop(argv._));
+    /* eslint-enable no-unused-expressions */
+  }
+ catch (err) {
+    /* eslint-disable no-console */
+    console.error(`Error running firebase action: ${err.message || 'Error'}`);
+    /* eslint-enable no-console */
     process.exit(1);
-  });
-
-program
-  .parse(process.argv);
-
-if (program.args.length < 1) {
-  console.log('No command specified. See \'firebase-extra --help\':');  // eslint-disable-line no-console
-  program.outputHelp();
-  process.exit(1);
-}
+  }
+}());

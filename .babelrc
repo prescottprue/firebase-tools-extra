@@ -9,7 +9,7 @@
       }
     ]
   ],
-  "plugins": ["lodash"],
+  "plugins": ["lodash", "@babel/transform-modules-commonjs"],
   "env": {
     "es": {
       "comments": false,

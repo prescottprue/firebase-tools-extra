@@ -1,7 +1,6 @@
 import {
   dataArrayFromSnap,
   parseFixturePath,
-  envVarBasedOnCIEnv,
   slashPathToFirestoreRef,
   initializeFirebase
 } from '../utils';
@@ -14,27 +13,21 @@ import {
  * of options (parsed by cy.callFirestore custom Cypress command)
  * @param {String} withMeta -
  */
-export default function firestoreAction(action = 'set', actionPath, thirdArg, withMeta) {
+export default function firestoreAction(originalArgv, action = 'set', actionPath, thirdArg) {
   const fbInstance = initializeFirebase();
 
-  let fixtureData;
   let options = {};
   const parsedVal = parseFixturePath(thirdArg);
 
   // Otherwise handle third argument as an options object
   options = parsedVal;
-  if (withMeta) {
-    const actionPrefix = action === 'update' ? 'updated' : 'created';
-    fixtureData[`${actionPrefix}By`] = envVarBasedOnCIEnv('TEST_UID');
-    /* eslint-disable standard/computed-property-even-spacing */
-    fixtureData[
-      `${actionPrefix}At`
-    ] = fbInstance.firestore.FieldValue.serverTimestamp();
-    /* eslint-enable standard/computed-property-even-spacing */
-  }
 
   // Create ref from slash and any provided query options
-  const ref = slashPathToFirestoreRef(fbInstance.firestore(), actionPath, options);
+  const ref = slashPathToFirestoreRef(
+    fbInstance.firestore(),
+    actionPath,
+    options
+  );
 
   // Confirm ref has action as a method
   if (typeof ref[action] !== 'function') {
@@ -44,19 +37,24 @@ export default function firestoreAction(action = 'set', actionPath, thirdArg, wi
 
   try {
     // Call action with fixture data
-    return ref[action](fixtureData).then((res) => {
-      const dataArray = dataArrayFromSnap(res);
+    return ref[action](parsedVal)
+      .then((res) => {
+        const dataArray = dataArrayFromSnap(res);
 
-      // Write results to stdout to be loaded in tests
-      if (action === 'get') {
-        process.stdout.write(JSON.stringify(dataArray));
-      }
+        // Write results to stdout to be loaded in tests
+        if (action === 'get') {
+          process.stdout.write(JSON.stringify(dataArray));
+        }
 
-      return dataArray;
-    });
+        return dataArray;
+      })
+      .catch((err) => {
+        console.log(`Error with ${action} at path "${actionPath}": `, err);
+        return Promise.reject(err);
+      });
   }
   catch (err) {
-    console.log(`Error with ${action} at path "${actionPath}": `, err); // eslint-disable-line no-console
+    console.log(`${action} at path "${actionPath}" threw an error: `, err);
     throw err;
   }
 }
