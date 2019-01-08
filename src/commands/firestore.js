@@ -49,12 +49,12 @@ export default function firestoreAction(originalArgv, action = 'set', actionPath
         return dataArray;
       })
       .catch((err) => {
-        console.log(`Error with ${action} at path "${actionPath}": `, err);
+        console.log(`Error with ${action} at path "${actionPath}": `, err); // eslint-disable-line no-console
         return Promise.reject(err);
       });
   }
   catch (err) {
-    console.log(`${action} at path "${actionPath}" threw an error: `, err);
+    console.log(`${action} at path "${actionPath}" threw an error: `, err); // eslint-disable-line no-console
     throw err;
   }
 }
