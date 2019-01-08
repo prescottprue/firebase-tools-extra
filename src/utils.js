@@ -76,7 +76,6 @@ export function envVarBasedOnCIEnv(varNameRoot) {
   const prefix = getEnvPrefix();
   const combined = `${prefix}${varNameRoot}`;
   const localTestConfigPath = path.join(DEFAULT_BASE_PATH, DEFAULT_TEST_FOLDER_PATH, 'config.json');
-  console.log('env var based on ci env in firebase-tools-extra');
 
   if (fs.existsSync(localTestConfigPath)) {
     const configObj = require(localTestConfigPath); // eslint-disable-line global-require, import/no-dynamic-require
@@ -132,7 +131,6 @@ function getParsedEnvVar(varNameRoot) {
  */
 function getServiceAccount() {
   const serviceAccountPath = getServiceAccountPath();
-  console.log('get service account in firebase-tools-extra');
 
   // Check for local service account file (Local dev)
   if (fs.existsSync(serviceAccountPath)) {
