@@ -38,7 +38,6 @@ export function parseFixturePath(unparsed) {
       return JSON.parse(unparsed);
     }
     catch (err) {
-      console.log('Error parsing fixture to JSON:', err); // eslint-disable-line no-console
       return unparsed;
     }
   }
@@ -174,7 +173,6 @@ export function initializeFirebase() {
         credential: admin.credential.cert(serviceAccount),
         databaseURL: `https://${cleanProjectId}.firebaseio.com`
       });
-      fbInstance.firestore().settings({ timestampsInSnapshots: true });
     }
     return fbInstance;
   }
