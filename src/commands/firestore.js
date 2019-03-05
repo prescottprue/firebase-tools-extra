@@ -1,3 +1,4 @@
+import { isObject } from 'lodash';
 import {
   dataArrayFromSnap,
   parseFixturePath,
@@ -18,7 +19,6 @@ export default function firestoreAction(originalArgv, action = 'set', actionPath
 
   let options = {};
   const parsedVal = parseFixturePath(thirdArg);
-
   // Otherwise handle third argument as an options object
   options = parsedVal;
 
@@ -28,6 +28,15 @@ export default function firestoreAction(originalArgv, action = 'set', actionPath
     actionPath,
     options
   );
+
+  // TODO: Support parsing other values to timestamps
+  // Attempt to convert createdAt to a timestamp
+  if (isObject(parsedVal) && parsedVal.createdAt) {
+    try {
+      parsedVal.createdAt = new Date(parsedVal.createdAt);
+    }
+    catch (err) {} // eslint-disable-line
+  }
 
   // Confirm ref has action as a method
   if (typeof ref[action] !== 'function') {
