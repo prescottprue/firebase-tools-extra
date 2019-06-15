@@ -24,7 +24,10 @@ export function readJsonFile(filePath) {
  catch (err) {
     /* eslint-disable no-console */
     console.error(
-      `Unable to parse ${DEFAULT_BASE_PATH} - JSON is most likley not valid`
+      `Unable to parse ${filePath.replace(
+        DEFAULT_BASE_PATH,
+        ""
+      )} - JSON is most likley not valid`
     );
     /* eslint-enable no-console */
     return {};
@@ -174,7 +177,7 @@ export function getServiceAccount(envSlug) {
   const serviceAccountPath = getServiceAccountPath(envSlug);
   // Check for local service account file (Local dev)
   if (fs.existsSync(serviceAccountPath)) {
-    return readJsonFile(serviceAccountPath); // eslint-disable-line global-require, import/no-dynamic-require
+    return require(serviceAccountPath); // eslint-disable-line global-require, import/no-dynamic-require
   }
   // Use environment variables (CI)
   const serviceAccountEnvVar = envVarBasedOnCIEnv("SERVICE_ACCOUNT");
