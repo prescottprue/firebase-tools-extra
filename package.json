@@ -1,6 +1,6 @@
 {
   "name": "firebase-tools-extra",
-  "version": "0.1.0-alpha",
+  "version": "0.1.0-alpha.2",
   "description": "Extra methods for firebase-tools which support using a service account.",
   "main": "lib/index.js",
   "module": "lib/index.js",
@@ -32,7 +32,6 @@
     "cli"
   ],
   "dependencies": {
-    "chalk": "^2.4.1",
     "firebase-admin": "^8.0.0",
     "lodash": "^4.17.11",
     "yargs": "^13.2.4"
