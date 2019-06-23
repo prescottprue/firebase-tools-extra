@@ -189,11 +189,9 @@ export default function firestoreAction(
     if (withMeta) {
       const actionPrefix = action === "update" ? "updated" : "created";
       fixtureData[`${actionPrefix}By`] = envVarBasedOnCIEnv("TEST_UID");
-      /* eslint-disable standard/computed-property-even-spacing */
       fixtureData[
         `${actionPrefix}At`
       ] = fbInstance.firestore.FieldValue.serverTimestamp();
-      /* eslint-enable standard/computed-property-even-spacing */
     }
   }
  else {
