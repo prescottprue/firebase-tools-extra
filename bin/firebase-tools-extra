@@ -55,7 +55,7 @@ const commands = [
   }
  catch (err) {
     /* eslint-disable no-console */
-    console.error(`Error running firebase action: ${err.message || 'Error'}`);
+    console.error(`Error running firebase action: ${err.message || 'Error'} ${err.stack}`);
     /* eslint-enable no-console */
     process.exit(1);
   }
