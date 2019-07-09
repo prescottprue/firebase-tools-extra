@@ -44,7 +44,7 @@ function readFixture(fixturePath) {
     fixturesPath = path.join(FALLBACK_TEST_FOLDER_PATH, "fixtures");
     // Confirm fixture exists
     const newPathToFixture = path.join(fixturesPath, fixturePath);
-    if (!fs.existsSync(pathToFixtureFile)) {
+    if (!fs.existsSync(newPathToFixture)) {
       throw new Error(
         `Fixture not found at path: ${pathToFixtureFile} or ${newPathToFixture}`
       );
@@ -54,7 +54,7 @@ function readFixture(fixturePath) {
   const fixtureFileExtension = path.extname(fixturePath);
   switch (fixtureFileExtension) {
     case ".json":
-      return readJsonFixture(fixturePath);
+      return readJsonFixture(pathToFixtureFile);
     default:
       return fs.readFileSync(pathToFixtureFile);
   }
@@ -182,9 +182,12 @@ export default function firestoreAction(
     options
   );
 
+  // TODO: refactor to make the initialisation for options and its structure more explicit
+
+  // TODO: the fact that thirdArg can be of string type with value undefined suggests type coercion in the caller
   // Check to see if parsedVal is fixture path
-  if (isString(parsedVal)) {
-    fixtureData = readFixture(thirdArg);
+  if (thirdArg && thirdArg !== "undefined" && isString(parsedVal)) {
+    fixtureData = readFixture(parsedVal);
     // Add meta if withMeta option exists
     if (withMeta) {
       const actionPrefix = action === "update" ? "updated" : "created";
@@ -193,6 +196,7 @@ export default function firestoreAction(
         `${actionPrefix}At`
       ] = fbInstance.firestore.FieldValue.serverTimestamp();
     }
+    options = fixtureData;
   }
  else {
     // Otherwise handle third argument as an options object
