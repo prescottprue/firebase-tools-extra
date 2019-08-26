@@ -1,6 +1,6 @@
 {
   "name": "firebase-tools-extra",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Extra methods for firebase-tools which support using a service account.",
   "main": "lib/index.js",
   "module": "lib/index.js",
@@ -32,28 +32,28 @@
     "cli"
   ],
   "dependencies": {
-    "firebase-admin": "^8.2.0",
-    "lodash": "^4.17.11",
-    "yargs": "^13.2.4"
+    "firebase-admin": "^8.4.0",
+    "lodash": "^4.17.15",
+    "yargs": "^14.0.0"
   },
   "devDependencies": {
-    "@babel/cli": "^7.4.4",
-    "@babel/core": "^7.4.5",
-    "@babel/plugin-transform-modules-commonjs": "^7.4.4",
-    "@babel/preset-env": "^7.4.5",
+    "@babel/cli": "^7.5.5",
+    "@babel/core": "^7.5.5",
+    "@babel/plugin-transform-modules-commonjs": "^7.5.0",
+    "@babel/preset-env": "^7.5.5",
     "babel-eslint": "^10.0.1",
     "babel-plugin-lodash": "^3.3.4",
     "cross-env": "^5.2.0",
-    "eslint": "^5.16.0",
+    "eslint": "^6.2.2",
     "eslint-config-airbnb": "^17.1.0",
-    "eslint-config-prettier": "^4.3.0",
-    "eslint-plugin-import": "^2.17.3",
-    "eslint-plugin-jsx-a11y": "^6.2.1",
+    "eslint-config-prettier": "^6.1.0",
+    "eslint-plugin-import": "^2.18.2",
+    "eslint-plugin-jsx-a11y": "^6.2.3",
     "eslint-plugin-prettier": "^3.1.0",
-    "eslint-plugin-react": "^7.13.0",
-    "husky": "^2.4.0",
+    "eslint-plugin-react": "^7.14.3",
+    "husky": "^3.0.4",
     "prettier": "^1.18.2",
-    "rimraf": "^2.6.3"
+    "rimraf": "^3.0.0"
   },
   "license": "MIT",
   "repository": {
