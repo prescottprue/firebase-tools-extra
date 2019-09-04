@@ -5,15 +5,14 @@ import fs from "fs";
 import {
   DEFAULT_BASE_PATH,
   DEFAULT_TEST_FOLDER_PATH,
-  FALLBACK_TEST_FOLDER_PATH,
-  FIREBASE_TOOLS_YES_ARGUMENT
+  FALLBACK_TEST_FOLDER_PATH
 } from "./constants";
 
 /**
  * Get settings from firebaserc file
  * @return {Object} Firebase settings object
  */
-export function readJsonFile(filePath) {
+export function readJsonFile(filePath: string): any {
   if (!fs.existsSync(filePath)) {
     return {};
   }
@@ -34,18 +33,23 @@ export function readJsonFile(filePath) {
   }
 }
 
+interface DataItem {
+  id: string
+  data: any
+}
+
+// type QueryOrDocumentSnapshot = admin.firestore.QuerySnapshot & admin.firestore.DocumentSnapshot
 /**
  * Create data object with values for each document with keys being doc.id.
  * @param  {firebase.database.DataSnapshot} snapshot - Data for which to create
  * an ordered array.
  * @return {Object|Null} Object documents from snapshot or null
  */
-export function dataArrayFromSnap(snap) {
+export function dataArrayFromSnap(snap: admin.firestore.QuerySnapshot | admin.firestore.DocumentSnapshot): DataItem[] {
   const data = [];
-  if (snap.data && snap.exists) {
+  if (snap instanceof admin.firestore.DocumentSnapshot && snap.data && snap.exists) {
     data.push({ id: snap.id, data: snap.data() });
-  }
- else if (snap.forEach) {
+  } else if (snap instanceof admin.firestore.QuerySnapshot && snap.forEach) {
     snap.forEach(doc => {
       data.push({ id: doc.id, data: doc.data() || doc });
     });
@@ -57,19 +61,18 @@ export function dataArrayFromSnap(snap) {
  * Parse fixture path string into JSON with error handling
  * @param {String} unparsed - Unparsed string to be parsed into JSON
  */
-export function parseFixturePath(unparsed) {
+export function parseFixturePath(unparsed: string): any {
   if (isString(unparsed)) {
     try {
       return JSON.parse(unparsed);
-    }
- catch (err) {
+    } catch (err) {
       return unparsed;
     }
   }
   return unparsed;
 }
 
-function getEnvironmentSlug() {
+function getEnvironmentSlug(): string {
   return (
     process.env.CI_ENVIRONMENT_SLUG || process.env.CI_COMMIT_REF_SLUG || "stage"
   );
@@ -80,12 +83,12 @@ function getEnvironmentSlug() {
  * within CI. Falls back to staging (i.e. STAGE)
  * @return {String} Environment prefix string
  */
-export function getEnvPrefix(envName) {
+export function getEnvPrefix(envName?: string): string {
   const envSlug = envName || getEnvironmentSlug();
   return `${envSlug.toUpperCase()}_`;
 }
 
-function getServiceAccountPath(envName = "") {
+function getServiceAccountPath(envName = ""): string {
   const withPrefix = path.join(
     DEFAULT_BASE_PATH,
     `serviceAccount-${envName}.json`
@@ -104,7 +107,7 @@ function getServiceAccountPath(envName = "") {
  * envVarBasedOnCIEnv('FIREBASE_PROJECT_ID')
  * // => 'fireadmin-stage' (value of 'STAGE_FIREBASE_PROJECT_ID' environment var)
  */
-export function envVarBasedOnCIEnv(varNameRoot) {
+export function envVarBasedOnCIEnv(varNameRoot: string): any {
   const prefix = getEnvPrefix();
   const combined = `${prefix}${varNameRoot}`;
   const localTestConfigPath = path.join(
@@ -114,7 +117,7 @@ export function envVarBasedOnCIEnv(varNameRoot) {
   );
 
   if (fs.existsSync(localTestConfigPath)) {
-    const configObj = require(localTestConfigPath); // eslint-disable-line global-require, import/no-dynamic-require
+    const configObj = require(localTestConfigPath); // eslint-disable-line global-require, import/no-dynamic-require, @typescript-eslint/no-var-requires
     return configObj[combined] || configObj[varNameRoot];
   }
   const fallbackConfigPath = path.join(
@@ -123,7 +126,7 @@ export function envVarBasedOnCIEnv(varNameRoot) {
     "config.json"
   );
   if (fs.existsSync(fallbackConfigPath)) {
-    const configObj = require(fallbackConfigPath); // eslint-disable-line global-require, import/no-dynamic-require
+    const configObj = require(fallbackConfigPath); // eslint-disable-line global-require, import/no-dynamic-require, @typescript-eslint/no-var-requires
     return configObj[combined] || configObj[varNameRoot];
   }
 
@@ -140,7 +143,7 @@ export function envVarBasedOnCIEnv(varNameRoot) {
  * getParsedEnvVar('FIREBASE_PRIVATE_KEY_ID')
  * // => 'fireadmin-stage' (parsed value of 'STAGE_FIREBASE_PRIVATE_KEY_ID' environment var)
  */
-function getParsedEnvVar(varNameRoot) {
+function getParsedEnvVar(varNameRoot: string): any {
   const val = envVarBasedOnCIEnv(varNameRoot);
   const prefix = getEnvPrefix();
   const combinedVar = `${prefix}${varNameRoot}`;
@@ -156,13 +159,25 @@ function getParsedEnvVar(varNameRoot) {
       return JSON.parse(val);
     }
     return val;
-  }
- catch (err) {
+  } catch (err) {
     /* eslint-disable no-console */
     console.error(`Error parsing ${combinedVar}`);
     /* eslint-enable no-console */
     return val;
   }
+}
+
+interface ServiceAccount {
+  type: string;
+  project_id: string;
+  private_key_id: string;
+  private_key: string;
+  client_email: string;
+  client_id: string;
+  auth_uri: string;
+  token_uri: string;
+  auth_provider_x509_cert_url: string;
+  client_x509_cert_url: string;
 }
 
 /**
@@ -173,7 +188,7 @@ function getParsedEnvVar(varNameRoot) {
  * Get service account from either local file or environment variables
  * @return {Object} Service account object
  */
-export function getServiceAccount(envSlug) {
+export function getServiceAccount(envSlug?: string): ServiceAccount {
   const serviceAccountPath = getServiceAccountPath(envSlug);
   // Check for local service account file (Local dev)
   if (fs.existsSync(serviceAccountPath)) {
@@ -185,8 +200,7 @@ export function getServiceAccount(envSlug) {
     if (typeof serviceAccountEnvVar === "string") {
       try {
         return JSON.parse(serviceAccountEnvVar);
-      }
- catch (err) {
+      } catch (err) {
         /* eslint-disable no-console */
         console.error(
           "Issue parsing SERVICE_ACCOUNT environment variable from string to object, returning string"
@@ -204,6 +218,7 @@ export function getServiceAccount(envSlug) {
     );
     /* eslint-enable no-console */
   }
+  /* eslint-disable @typescript-eslint/camelcase */
   return {
     type: "service_account",
     project_id: envVarBasedOnCIEnv("FIREBASE_PROJECT_ID"),
@@ -216,16 +231,17 @@ export function getServiceAccount(envSlug) {
     auth_provider_x509_cert_url: "https://www.googleapis.com/oauth2/v1/certs",
     client_x509_cert_url: envVarBasedOnCIEnv("FIREBASE_CERT_URL")
   };
+  /* eslint-enable @typescript-eslint/camelcase */
 }
 
-let fbInstance;
+let fbInstance: admin.app.App;
 
 /**
  * Initialize Firebase instance from service account (from either local
  * serviceAccount.json or environment variables)
  * @return {Firebase} Initialized Firebase instance
  */
-export function initializeFirebase() {
+export function initializeFirebase(): admin.app.App {
   try {
     // Get service account from local file falling back to environment variables
     if (!fbInstance) {
@@ -242,13 +258,12 @@ export function initializeFirebase() {
         "top-agent-int"
       );
       fbInstance = admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount),
+        credential: admin.credential.cert((serviceAccount as any)),
         databaseURL: `https://${cleanProjectId}.firebaseio.com`
       });
     }
     return fbInstance;
-  }
- catch (err) {
+  } catch (err) {
     /* eslint-disable no-console */
     console.error(
       "Error initializing firebase-admin instance from service account."
@@ -266,20 +281,18 @@ export function initializeFirebase() {
  * @return {firestore.CollectionReference|firestore.DocumentReference}
  */
 export function slashPathToFirestoreRef(
-  firestoreInstance,
-  slashPath,
-  options = {}
-) {
+  firestoreInstance: any,
+  slashPath: string,
+  options?: any
+): admin.firestore.CollectionReference & admin.firestore.DocumentReference {
   let ref = firestoreInstance;
   const srcPathArr = slashPath.split("/");
   srcPathArr.forEach(pathSegment => {
     if (ref.collection) {
       ref = ref.collection(pathSegment);
-    }
- else if (ref.doc) {
+    } else if (ref.doc) {
       ref = ref.doc(pathSegment);
-    }
- else {
+    } else {
       throw new Error(`Invalid slash path: ${slashPath}`);
     }
   });
@@ -299,29 +312,6 @@ export function slashPathToFirestoreRef(
  * @param  {Array} args - Command arguments to convert into a string
  * @return {String} Arguments section of command string
  */
-export function getArgsString(args) {
+export function getArgsString(args: string[]): string {
   return args && args.length ? ` ${args.join(" ")}` : "";
-}
-
-/**
- * Add default Firebase arguments to arguments array.
- * @param {Array} args - arguments array
- * @param  {Object} [opts={}] - Options object
- * @param {Boolean} [opts.disableYes=false] - Whether or not to disable the
- * yes argument
- */
-export function addDefaultArgs(args, opts = {}) {
-  const { disableYes = false } = opts;
-  const newArgs = [...args];
-  const projectId = envVarBasedOnCIEnv("FIREBASE_PROJECT_ID");
-  // Include project id command so command runs on the current project
-  if (!newArgs.includes("-P") || !newArgs.includes(projectId)) {
-    newArgs.push("-P");
-    newArgs.push(projectId);
-  }
-  // Add Firebase's automatic approval argument if it is not already in newArgs
-  if (!disableYes && !newArgs.includes(FIREBASE_TOOLS_YES_ARGUMENT)) {
-    newArgs.push(FIREBASE_TOOLS_YES_ARGUMENT);
-  }
-  return newArgs;
 }
