@@ -12,13 +12,14 @@ declare module "constants" {
 declare module "utils" {
     import * as admin from "firebase-admin";
     export function readJsonFile(filePath: string): any;
-    export function dataArrayFromSnap(snap: admin.firestore.QuerySnapshot | admin.firestore.DocumentSnapshot): {
+    interface DataItem {
         id: string;
-        data: FirebaseFirestore.DocumentData | undefined;
-    }[];
+        data: any;
+    }
+    export function dataArrayFromSnap(snap: admin.firestore.QuerySnapshot | admin.firestore.DocumentSnapshot): DataItem[];
     export function parseFixturePath(unparsed: string): any;
     export function getEnvPrefix(envName?: string): string;
-    export function envVarBasedOnCIEnv(varNameRoot: string): any;
+    export function envVarBasedOnCIEnv(varNameRoot: string, envName?: string): any;
     interface ServiceAccount {
         type: string;
         project_id: string;
@@ -51,7 +52,7 @@ declare module "commands/firestore" {
     }
     export function buildFirestoreCommand(action: string, actionPath: string, data?: any, opts?: FirestoreCommandOptions): string;
     export type FirestoreAction = 'get' | 'set' | 'update' | 'delete';
-    export default function firestoreAction(originalArgv: any, action: "update" | "get" | "set" | "delete" | undefined, actionPath: string, thirdArg: any, withMeta: boolean): any;
+    export default function firestoreAction(action: "update" | "get" | "set" | "delete" | undefined, actionPath: string, thirdArg?: any, withMeta?: boolean): Promise<any>;
 }
 declare module "index" {
     import firestoreAction from "commands/firestore";

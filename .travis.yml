@@ -5,12 +5,13 @@ language: node_js
 node_js:
   - 8 # Active
   - 10
+  - 12
 
 notifications:
   email:
     # Only send notifications when travis status changes
-    on_failure: change
-    on_success: change
+    on_failure: never
+    on_success: never
 
 cache: npm
 
@@ -21,6 +22,7 @@ branches:
 
 script:
   - npm run lint
+  - npm run test:full
 
 deploy:
   - provider: npm

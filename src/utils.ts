@@ -81,14 +81,14 @@ function getEnvironmentSlug(): string {
 /**
  * Get prefix for current environment based on environment vars available
  * within CI. Falls back to staging (i.e. STAGE)
- * @return {String} Environment prefix string
+ * @returns Environment prefix string
  */
 export function getEnvPrefix(envName?: string): string {
   const envSlug = envName || getEnvironmentSlug();
   return `${envSlug.toUpperCase()}_`;
 }
 
-function getServiceAccountPath(envName = ""): string {
+function getServiceAccountPath(envName?: string): string {
   const withPrefix = path.join(
     DEFAULT_BASE_PATH,
     `serviceAccount-${envName}.json`
@@ -107,8 +107,8 @@ function getServiceAccountPath(envName = ""): string {
  * envVarBasedOnCIEnv('FIREBASE_PROJECT_ID')
  * // => 'fireadmin-stage' (value of 'STAGE_FIREBASE_PROJECT_ID' environment var)
  */
-export function envVarBasedOnCIEnv(varNameRoot: string): any {
-  const prefix = getEnvPrefix();
+export function envVarBasedOnCIEnv(varNameRoot: string, envName?: string): any {
+  const prefix = getEnvPrefix(envName);
   const combined = `${prefix}${varNameRoot}`;
   const localTestConfigPath = path.join(
     DEFAULT_BASE_PATH,
@@ -137,15 +137,16 @@ export function envVarBasedOnCIEnv(varNameRoot: string): any {
 /**
  * Get parsed value of environment variable. Useful for environment variables
  * which have characters that need to be escaped.
- * @param  {String} varNameRoot - variable name without the environment prefix
- * @return {Any} Value of the environment variable
+ * @param varNameRoot - variable name without the environment prefix
+ * @param envName - variable name without the environment prefix
+ * @returns Value of the environment variable
  * @example
  * getParsedEnvVar('FIREBASE_PRIVATE_KEY_ID')
  * // => 'fireadmin-stage' (parsed value of 'STAGE_FIREBASE_PRIVATE_KEY_ID' environment var)
  */
-function getParsedEnvVar(varNameRoot: string): any {
+function getParsedEnvVar(varNameRoot: string, envName?: string): any {
   const val = envVarBasedOnCIEnv(varNameRoot);
-  const prefix = getEnvPrefix();
+  const prefix = getEnvPrefix(envName);
   const combinedVar = `${prefix}${varNameRoot}`;
   if (!val) {
     /* eslint-disable no-console */
@@ -195,7 +196,7 @@ export function getServiceAccount(envSlug?: string): ServiceAccount {
     return require(serviceAccountPath); // eslint-disable-line global-require, import/no-dynamic-require
   }
   // Use environment variables (CI)
-  const serviceAccountEnvVar = envVarBasedOnCIEnv("SERVICE_ACCOUNT");
+  const serviceAccountEnvVar = envVarBasedOnCIEnv("SERVICE_ACCOUNT", envSlug);
   if (serviceAccountEnvVar) {
     if (typeof serviceAccountEnvVar === "string") {
       try {
@@ -210,7 +211,7 @@ export function getServiceAccount(envSlug?: string): ServiceAccount {
     }
     return serviceAccountEnvVar;
   }
-  const clientId = envVarBasedOnCIEnv("FIREBASE_CLIENT_ID");
+  const clientId = envVarBasedOnCIEnv("FIREBASE_CLIENT_ID", envSlug);
   if (clientId) {
     /* eslint-disable no-console */
     console.error(
@@ -221,15 +222,15 @@ export function getServiceAccount(envSlug?: string): ServiceAccount {
   /* eslint-disable @typescript-eslint/camelcase */
   return {
     type: "service_account",
-    project_id: envVarBasedOnCIEnv("FIREBASE_PROJECT_ID"),
-    private_key_id: envVarBasedOnCIEnv("FIREBASE_PRIVATE_KEY_ID"),
-    private_key: getParsedEnvVar("FIREBASE_PRIVATE_KEY"),
-    client_email: envVarBasedOnCIEnv("FIREBASE_CLIENT_EMAIL"),
+    project_id: envVarBasedOnCIEnv("FIREBASE_PROJECT_ID", envSlug),
+    private_key_id: envVarBasedOnCIEnv("FIREBASE_PRIVATE_KEY_ID", envSlug),
+    private_key: getParsedEnvVar("FIREBASE_PRIVATE_KEY", envSlug),
+    client_email: envVarBasedOnCIEnv("FIREBASE_CLIENT_EMAIL", envSlug),
     client_id: clientId,
     auth_uri: "https://accounts.google.com/o/oauth2/auth",
     token_uri: "https://accounts.google.com/o/oauth2/token",
     auth_provider_x509_cert_url: "https://www.googleapis.com/oauth2/v1/certs",
-    client_x509_cert_url: envVarBasedOnCIEnv("FIREBASE_CERT_URL")
+    client_x509_cert_url: envVarBasedOnCIEnv("FIREBASE_CERT_URL", envSlug)
   };
   /* eslint-enable @typescript-eslint/camelcase */
 }
@@ -242,26 +243,36 @@ let fbInstance: admin.app.App;
  * @return {Firebase} Initialized Firebase instance
  */
 export function initializeFirebase(): admin.app.App {
+  
   try {
     // Get service account from local file falling back to environment variables
     if (!fbInstance) {
-      const serviceAccount = getServiceAccount();
-      const projectId = get(serviceAccount, "project_id");
-      if (!isString(projectId)) {
-        const missingProjectIdErr =
-          "Error project_id from service account to initialize Firebase.";
-        console.error(missingProjectIdErr); // eslint-disable-line no-console
-        throw new Error(missingProjectIdErr);
+      if (process.env.FIRESTORE_EMULATOR_HOST) {
+        fbInstance = admin.initializeApp({ projectId: 'test' })
+        admin.firestore().settings({
+          servicePath: 'localhost',
+          port: 8080
+        });
+      } else {
+        const serviceAccount = getServiceAccount();
+        const projectId = get(serviceAccount, "project_id");
+        if (!isString(projectId)) {
+          const missingProjectIdErr =
+            "Error project_id from service account to initialize Firebase.";
+          console.error(missingProjectIdErr); // eslint-disable-line no-console
+          throw new Error(missingProjectIdErr);
+        }
+        const cleanProjectId = projectId.replace(
+          "firebase-top-agent-int",
+          "top-agent-int"
+        );
+
+          fbInstance = admin.initializeApp({
+            credential: admin.credential.cert((serviceAccount as any)),
+            databaseURL: `https://${cleanProjectId}.firebaseio.com`
+          });
+        }
       }
-      const cleanProjectId = projectId.replace(
-        "firebase-top-agent-int",
-        "top-agent-int"
-      );
-      fbInstance = admin.initializeApp({
-        credential: admin.credential.cert((serviceAccount as any)),
-        databaseURL: `https://${cleanProjectId}.firebaseio.com`
-      });
-    }
     return fbInstance;
   } catch (err) {
     /* eslint-disable no-console */
@@ -298,7 +309,7 @@ export function slashPathToFirestoreRef(
   });
 
   // Apply limit to query if it exists
-  if (options.limit && typeof ref.limit === "function") {
+  if (options && options.limit && typeof ref.limit === "function") {
     ref = ref.limit(options.limit);
   }
 

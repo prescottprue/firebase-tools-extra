@@ -174,13 +174,12 @@ export type FirestoreAction = 'get' | 'set' | 'update' | 'delete'
  * of options (parsed by cy.callFirestore custom Cypress command)
  * @param withMeta -
  */
-export default function firestoreAction(
-  originalArgv: any,
+export default async function firestoreAction(
   action: FirestoreAction = "set",
   actionPath: string,
-  thirdArg: any,
-  withMeta: boolean
-) {
+  thirdArg?: any,
+  withMeta?: boolean
+): Promise<any> {
   const fbInstance = initializeFirebase();
 
   let fixtureData: any;
@@ -234,23 +233,18 @@ export default function firestoreAction(
 
   try {
     // Call action with fixture data
-    return (ref[action] as any)(options)
-      .then((res: any) => {
-        const dataArray = dataArrayFromSnap(res);
+    const res = await (ref[action] as any)(options)
 
-        // Write results to stdout to be loaded in tests
-        if (action === "get") {
-          process.stdout.write(JSON.stringify(dataArray));
-        }
+    const dataToWrite = typeof res.data === 'function' ? res.data() : res.docs
 
-        return dataArray;
-      })
-      .catch((err: Error) => {
-        console.error(`Error with ${action} at path "${actionPath}": `, err.message); // eslint-disable-line no-console
-        return Promise.reject(err);
-      });
+    // Write results to stdout to be loaded in tests
+    if (action === "get") {
+      process.stdout.write(JSON.stringify(dataToWrite));
+    }
+
+    return dataToWrite;
   } catch (err) {
-    console.error(`${action} at path "${actionPath}" threw an error: `, err.message); // eslint-disable-line no-console
+    console.error(`Error with ${action} at path "${actionPath}": `, err.message); // eslint-disable-line no-console
     throw err;
   }
 }

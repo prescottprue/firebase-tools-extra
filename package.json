@@ -22,6 +22,9 @@
     "build:typefile": "tsc --declaration --outFile index.d.ts --emitDeclarationOnly",
     "build:lib": "tsc",
     "build:esm": "tsc && tsc -m es6 --outDir lib-esm",
+    "emulate": "firebase serve --only firestore",
+    "test:full": "concurrently \"npm run emulate\" \"wait-port -o silent 8080 && npm run test\"",
+    "test": "ts-mocha -p ./tsconfig.json test/**/*.spec.ts --exit",
     "watch": "npm run build:commonjs -- --watch",
     "watch:es": "npm run build:es -- --watch",
     "lint": "eslint src/**.ts --ext .ts",
@@ -40,11 +43,16 @@
     "yargs": "^14.0.0"
   },
   "devDependencies": {
+    "@firebase/testing": "^0.12.3",
+    "@types/expect": "^1.20.4",
     "@types/lodash": "^4.14.138",
+    "@types/mocha": "^5.2.7",
     "@types/node": "^12.7.3",
     "@types/yargs": "^13.0.2",
     "@typescript-eslint/eslint-plugin": "^2.0.0",
     "@typescript-eslint/parser": "^2.0.0",
+    "chai": "^4.2.0",
+    "concurrently": "^4.1.2",
     "cross-env": "^5.2.0",
     "eslint": "^6.1.0",
     "eslint-config-airbnb": "^18.0.1",
@@ -57,9 +65,12 @@
     "eslint-plugin-react": "^7.14.3",
     "firebase-tools": "^7.2.4",
     "husky": "^3.0.4",
+    "mocha": "^6.2.0",
     "prettier": "^1.18.2",
     "rimraf": "^3.0.0",
-    "typescript": "^3.6.2"
+    "ts-mocha": "^6.0.0",
+    "typescript": "^3.6.2",
+    "wait-port": "^0.2.2"
   },
   "license": "MIT",
   "repository": {

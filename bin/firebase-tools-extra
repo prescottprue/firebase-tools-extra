@@ -1,7 +1,7 @@
 #!/usr/bin/env node
-const yargs = require('yargs'); // eslint-disable-line import/no-extraneous-dependencies
+/* eslint-disable consistent-return, @typescript-eslint/no-var-requires, @typescript-eslint/explicit-function-return-type */
+const yargs = require('yargs');
 const firestoreAction = require('../lib').default;
-const drop = require('lodash/drop');
 
 const commands = [
   {
@@ -24,21 +24,24 @@ const commands = [
     handler: (argv) => {
       // Log if verbose option is passed
       if (argv.verbose) {
+        /* eslint-disable no-console */
         console.info(
           `firestore command on :${argv.action} at ${argv.actionPath}`
         );
+        /* eslint-enable no-console */
       }
       return argv;
     }
   }
 ];
+
 (function runFirebaseExtra() {
-  // eslint-disable-line consistent-return
   let currentArgs;
   try {
     // TODO: Replace with commandDir when moving config to a directory
+    /* eslint-disable guard-for-in, no-restricted-syntax */
     for (const command in commands) {
-      // eslint-disable-line guard-for-in, no-restricted-syntax
+      /* eslint-enable guard-for-in, no-restricted-syntax */
       currentArgs = yargs.command(command);
     }
     yargs.option('withMeta', {
@@ -46,11 +49,12 @@ const commands = [
       default: false
     });
     /* eslint-disable no-unused-expressions */
-    const argv = currentArgs.option('verbose', {
+    const {argv} = currentArgs.option('verbose', {
       alias: 'v',
       default: false
-    }).argv;
-    return firestoreAction(argv, ...drop(argv._));
+    });
+    const args = argv._ || []
+    return firestoreAction(...args.slice(1));
     /* eslint-enable no-unused-expressions */
   }
  catch (err) {

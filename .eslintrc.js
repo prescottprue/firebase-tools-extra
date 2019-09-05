@@ -28,5 +28,21 @@ module.exports = {
     "new-cap": 0,
     "max-len": 0
   },
-  plugins: ["react"]
+  overrides: [
+    {
+      files: ['cmds/**'],
+      rules: {
+        "comma-dangle": ["error", { "functions": "never" }],
+        "@typescript-eslint/explicit-function-return-type": 0,
+        "@typescript-eslint/no-var-requires": 0,
+        "prettier/prettier": [
+          'error',
+          {
+            singleQuote: true, // airbnb
+            trailingComma: 'none', // airbnb
+          }
+        ]
+      }
+    }
+  ]
 };
