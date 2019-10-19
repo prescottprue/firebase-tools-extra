@@ -22,8 +22,8 @@ branches:
 
 script:
   - npm run lint
-  - firebase setup:emulators:firestore
-  - npm run test:full
+  # - firebase setup:emulators:firestore
+  # - npm run test:full
 
 deploy:
   - provider: npm
