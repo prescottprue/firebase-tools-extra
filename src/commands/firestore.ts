@@ -1,12 +1,13 @@
+import * as admin from 'firebase-admin'
 import { isObject, isDate, isString } from "lodash";
-import fs from "fs";
-import path from "path";
+import { existsSync, readFileSync } from "fs";
+import { join, extname } from "path";
 import {
-  dataArrayFromSnap,
   parseFixturePath,
   slashPathToFirestoreRef,
   initializeFirebase,
-  envVarBasedOnCIEnv
+  envVarBasedOnCIEnv,
+  getArgsString
 } from "../utils";
 import {
   FIREBASE_TOOLS_BASE_COMMAND,
@@ -16,16 +17,16 @@ import {
   FALLBACK_TEST_FOLDER_PATH
 } from "../constants";
 
+
 /**
  * Load fixture and parse into JSON
- * @param {String} fixturePath - Fixture's path from root
+ * @param fixturePath - Fixture's path from root
  */
-function readJsonFixture(fixturePath) {
-  const fixtureString = fs.readFileSync(fixturePath);
+function readJsonFixture(fixturePath: string): any {
+  const fixtureStringBuffer = readFileSync(fixturePath);
   try {
-    return JSON.parse(fixtureString);
-  }
- catch (err) {
+    return JSON.parse(fixtureStringBuffer.toString());
+  } catch (err) {
     console.error(`Error reading JSON fixture at path: ${fixturePath}`); // eslint-disable-line no-console
     throw err;
   }
@@ -33,41 +34,51 @@ function readJsonFixture(fixturePath) {
 
 /**
  * Read fixture file provided relative path
- * @param {String} fixturePath - Relative path of fixture file
+ * @param fixturePath - Relative path of fixture file
  */
-function readFixture(fixturePath) {
-  let fixturesPath = path.join(DEFAULT_TEST_FOLDER_PATH, "fixtures");
+function readFixture(fixturePath: string): any {
+  let fixturesPath = join(DEFAULT_TEST_FOLDER_PATH, "fixtures");
   // Confirm fixture exists
-  let pathToFixtureFile = path.join(fixturesPath, fixturePath);
+  let pathToFixtureFile = join(fixturesPath, fixturePath);
 
-  if (!fs.existsSync(pathToFixtureFile)) {
-    fixturesPath = path.join(FALLBACK_TEST_FOLDER_PATH, "fixtures");
+  if (!existsSync(pathToFixtureFile)) {
+    fixturesPath = join(FALLBACK_TEST_FOLDER_PATH, "fixtures");
     // Confirm fixture exists
-    const newPathToFixture = path.join(fixturesPath, fixturePath);
-    if (!fs.existsSync(newPathToFixture)) {
+    const newPathToFixture = join(fixturesPath, fixturePath);
+    if (!existsSync(newPathToFixture)) {
       throw new Error(
         `Fixture not found at path: ${pathToFixtureFile} or ${newPathToFixture}`
       );
     }
     pathToFixtureFile = newPathToFixture;
   }
-  const fixtureFileExtension = path.extname(fixturePath);
+  const fixtureFileExtension = extname(fixturePath);
   switch (fixtureFileExtension) {
     case ".json":
       return readJsonFixture(pathToFixtureFile);
     default:
-      return fs.readFileSync(pathToFixtureFile);
+      return readFileSync(pathToFixtureFile);
   }
+}
+
+export interface FirestoreCommandOptions {
+  projectId?: string
+  disableYes?: boolean
+  shallow?: boolean
+  /**
+   * Whether or not to recursivley delete
+   */
+  recursive?: boolean
 }
 
 /**
  * Add default Firebase arguments to arguments array.
- * @param {Array} args - arguments array
- * @param  {Object} [opts={}] - Options object
- * @param {Boolean} [opts.disableYes=false] - Whether or not to disable the
+ * @param args - arguments array
+ * @param [opts={}] - Options object
+ * @param [opts.disableYes=false] - Whether or not to disable the
  * yes argument
  */
-function addDefaultArgs(args, opts = {}) {
+function addDefaultArgs(args: string[], opts: FirestoreCommandOptions): string[] {
   const { projectId, disableYes = false } = opts;
   const newArgs = [...args];
   // Include project id command so command runs on the current project
@@ -82,8 +93,12 @@ function addDefaultArgs(args, opts = {}) {
   return newArgs;
 }
 
-function optionsToArgs(opts) {
-  const { shallow, recursive } = opts || {};
+/**
+ * Add command line options to args
+ * @param opts - Options for args
+ */
+function optionsToArgs(opts: FirestoreCommandOptions) {
+  const { shallow, recursive } = opts;
   const newArgs = [];
   if (recursive) {
     newArgs.push("-r");
@@ -95,30 +110,46 @@ function optionsToArgs(opts) {
 }
 
 /**
- * Create command arguments string from an array of arguments by joining them
- * with a space including a leading space. If no args provided, empty string
- * is returned
- * @param  {Array} args - Command arguments to convert into a string
- * @return {String} Arguments section of command string
+ * Options for firestore commands
  */
-function getArgsString(args) {
-  return args && args.length ? ` ${args.join(" ")}` : "";
+export interface FirestoreCommandOptions {
+  /**
+   * Whether or not to include meta data
+   */
+  withMeta?: boolean;
+  /**
+   * Extra arguments to add to CLI call
+   */
+  args?: string[];
+  /**
+   * CI token to pass as argument
+   */
+  token?: string;
+  /**
+   * Whether or not to recursivley delete
+   */
+  recursive?: boolean;
 }
 
 /**
  * Build Command to run Firestore action. Commands call either firebase-extra
  * (in bin/firebaseExtra.js) or firebase-tools directly. FIREBASE_TOKEN must
  * exist in environment if running commands that call firebase-tools.
- * @param  {String} action - action to run on Firstore (i.e. "add", "delete")
- * @param  {String} actionPath - Firestore path where action should be run
- * @param  {String|Object} fixturePath - Path to fixture. If object is passed,
+ * @param action - action to run on Firstore (i.e. "add", "delete")
+ * @param actionPath - Firestore path where action should be run
+ * @param fixturePath - Path to fixture. If object is passed,
  * it is used as options.
- * @param  {Object} [opts={}] - Options object
- * @param  {Object} opts.args - Extra arguments to be passed with command
- * @return {String} Command string to be used with cy.exec
+ * @param [opts={}] - Options object
+ * @param opts.args - Extra arguments to be passed with command
+ * @return Command string to be used with cy.exec
  */
-export function buildFirestoreCommand(action, actionPath, data, opts = {}) {
-  const options = isObject(data) ? data : opts;
+export function buildFirestoreCommand(
+  action: string,
+  actionPath: string,
+  data?: any,
+  opts?: FirestoreCommandOptions
+): string {
+  const options: FirestoreCommandOptions = isObject(data) ? data : opts || {};
   const { args = [] } = options;
   const argsWithDefaults = addDefaultArgs(args, {
     ...options,
@@ -154,25 +185,26 @@ export function buildFirestoreCommand(action, actionPath, data, opts = {}) {
   }
 }
 
+export type FirestoreAction = 'get' | 'set' | 'update' | 'delete'
+
 /**
- *
- * @param {String} action - Firestore action to run
- * @param {String} actionPath - Path at which Firestore action should be run
- * @param {String} thirdArg - Either path to fixture or string containing object
+ * Run action for Firestore
+ * @param action - Firestore action to run
+ * @param actionPath - Path at which Firestore action should be run
+ * @param thirdArg - Either path to fixture or string containing object
  * of options (parsed by cy.callFirestore custom Cypress command)
- * @param {String} withMeta -
+ * @param withMeta - Whether or not to include meta data
  */
-export default function firestoreAction(
-  originalArgv,
-  action = "set",
-  actionPath,
-  thirdArg,
-  withMeta
-) {
+export default async function firestoreAction(
+  action: FirestoreAction = "set",
+  actionPath: string,
+  thirdArg?: any,
+  withMeta?: boolean
+): Promise<any> {
   const fbInstance = initializeFirebase();
 
-  let fixtureData;
-  let options = {};
+  let fixtureData: any;
+  let options: any;
   const parsedVal = parseFixturePath(thirdArg);
 
   // Create ref from slash and any provided query options
@@ -194,51 +226,46 @@ export default function firestoreAction(
       fixtureData[`${actionPrefix}By`] = envVarBasedOnCIEnv("TEST_UID");
       fixtureData[
         `${actionPrefix}At`
-      ] = fbInstance.firestore.FieldValue.serverTimestamp();
+      ] = (fbInstance.firestore as typeof admin.firestore).FieldValue.serverTimestamp();
     }
     options = fixtureData;
-  }
- else {
+  } else {
     // Otherwise handle third argument as an options object
     options = parsedVal;
     // TODO: Support parsing other values to timestamps
     // Attempt to convert createdAt to a timestamp
-    if (isObject(parsedVal) && parsedVal.createdAt) {
+    if (isObject(parsedVal) && options.createdAt) {
       try {
-        const dateVal = new Date(parsedVal.createdAt);
+        const dateVal = new Date(options.createdAt);
         if (isDate(dateVal)) {
-          parsedVal.createdAt = dateVal;
+          options.createdAt = dateVal;
         }
-      } catch (err) {} // eslint-disable-line
+      } catch (err) {
+        console.log('Error parsing date value for createdAt') // eslint-disable-line
+      }
     }
   }
 
   // Confirm ref has action as a method
-  if (typeof ref[action] !== "function") {
+  if (typeof (ref as any)[action] !== "function") {
     const missingActionErr = `Ref at provided path "${actionPath}" does not have action "${action}"`;
     throw new Error(missingActionErr);
   }
 
   try {
     // Call action with fixture data
-    return ref[action](options)
-      .then(res => {
-        const dataArray = dataArrayFromSnap(res);
+    const res = await (ref as any)[action](options)
 
-        // Write results to stdout to be loaded in tests
-        if (action === "get") {
-          process.stdout.write(JSON.stringify(dataArray));
-        }
+    const dataToWrite = typeof res.data === 'function' ? res.data() : res.docs
 
-        return dataArray;
-      })
-      .catch(err => {
-        console.error(`Error with ${action} at path "${actionPath}": `, err); // eslint-disable-line no-console
-        return Promise.reject(err);
-      });
-  }
- catch (err) {
-    console.error(`${action} at path "${actionPath}" threw an error: `, err); // eslint-disable-line no-console
+    // Write results to stdout to be loaded in tests
+    if (action === "get") {
+      process.stdout.write(JSON.stringify(dataToWrite));
+    }
+
+    return dataToWrite;
+  } catch (err) {
+    console.error(`Error with ${action} at path "${actionPath}": `, err.message); // eslint-disable-line no-console
     throw err;
   }
 }
