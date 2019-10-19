@@ -28,12 +28,14 @@ export function readJsonFile(filePath: string): any {
     const fileBuffer = readFileSync(filePath, 'utf8')
     return JSON.parse(fileBuffer.toString());
   } catch (err) {
+    /* eslint-disable no-console */
     console.error(
       `Unable to parse ${filePath.replace(
         DEFAULT_BASE_PATH,
         ""
       )} - JSON is most likley not valid`
     );
+    /* eslint-enable no-console */
     return {};
   }
 }
