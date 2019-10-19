@@ -21,6 +21,17 @@ firebase-tools-extra can be used for in a number of ways, the most common is thr
 
 It is recommended for you to use [cypress-firebase](https://github.com/prescottprue/cypress-firebase) to call `firebase-tools-extra`. Follow the [guide in the cypress-firebase README](](https://github.com/prescottprue/cypress-firebase)).
 
+## Tests
+Tests are currently not set up since they were causing timeouts when trying to shut down the emulator. They will be re-enabled once that is solved.
+
+### Add back
+1. Install `yarn add -D concurrently wait-port ts-mocha chai mocha @types/mocha @types/expect @firebase/testing`
+1. Add the npm scripts:
+    ```json
+    "test:full": "concurrently \"npm run emulate\" \"wait-port -o silent 8080 && npm run test\"",
+    "test": "ts-mocha -p ./tsconfig.json test/**/*.spec.ts --exit",
+    ```
+1. Uncomment the command in `travis.yml`
 
 ## License
 
