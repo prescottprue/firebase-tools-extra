@@ -2,11 +2,9 @@ import * as admin from "firebase-admin";
 import { isString, get } from "lodash";
 import path from "path";
 import fs from "fs";
-import {
-  DEFAULT_BASE_PATH,
-  DEFAULT_TEST_FOLDER_PATH,
-  FALLBACK_TEST_FOLDER_PATH
-} from "./constants";
+import { DEFAULT_TEST_FOLDER_PATH, FALLBACK_TEST_FOLDER_PATH } from "./constants";
+
+export const DEFAULT_BASE_PATH = process.cwd();
 
 /**
  * Get settings from firebaserc file

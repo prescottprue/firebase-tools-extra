@@ -3,7 +3,6 @@ import { isObject, isDate, isString } from "lodash";
 import fs from "fs";
 import path from "path";
 import {
-  dataArrayFromSnap,
   parseFixturePath,
   slashPathToFirestoreRef,
   initializeFirebase,
@@ -21,7 +20,7 @@ import {
 
 /**
  * Load fixture and parse into JSON
- * @param {String} fixturePath - Fixture's path from root
+ * @param fixturePath - Fixture's path from root
  */
 function readJsonFixture(fixturePath: string): any {
   const fixtureStringBuffer = fs.readFileSync(fixturePath);
@@ -35,9 +34,9 @@ function readJsonFixture(fixturePath: string): any {
 
 /**
  * Read fixture file provided relative path
- * @param {String} fixturePath - Relative path of fixture file
+ * @param fixturePath - Relative path of fixture file
  */
-function readFixture(fixturePath: string) {
+function readFixture(fixturePath: string): any {
   let fixturesPath = path.join(DEFAULT_TEST_FOLDER_PATH, "fixtures");
   // Confirm fixture exists
   let pathToFixtureFile = path.join(fixturesPath, fixturePath);
@@ -71,9 +70,9 @@ export interface FirestoreCommandOptions {
 
 /**
  * Add default Firebase arguments to arguments array.
- * @param {Array} args - arguments array
- * @param  {Object} [opts={}] - Options object
- * @param {Boolean} [opts.disableYes=false] - Whether or not to disable the
+ * @param args - arguments array
+ * @param [opts={}] - Options object
+ * @param [opts.disableYes=false] - Whether or not to disable the
  * yes argument
  */
 function addDefaultArgs(args: string[], opts: FirestoreCommandOptions): string[] {
@@ -168,9 +167,9 @@ export type FirestoreAction = 'get' | 'set' | 'update' | 'delete'
 
 /**
  *
- * @param {String} action - Firestore action to run
- * @param {String} actionPath - Path at which Firestore action should be run
- * @param {String} thirdArg - Either path to fixture or string containing object
+ * @param action - Firestore action to run
+ * @param actionPath - Path at which Firestore action should be run
+ * @param thirdArg - Either path to fixture or string containing object
  * of options (parsed by cy.callFirestore custom Cypress command)
  * @param withMeta -
  */
