@@ -9,9 +9,6 @@ module.exports = {
         moduleDirectory: ["node_modules", "/"],
         extensions: [".js", ".jsx", ".ts", ".tsx"]
       }
-    },
-    react: {
-      version: '16.0'
     }
   },
   env: {
@@ -20,8 +17,6 @@ module.exports = {
   },
   rules: {
     "@typescript-eslint/no-explicit-any": 0,
-    "react/jsx-no-bind": 0,
-    "react/sort-comp": 0,
     "comma-dangle": [2, "never"],
     "no-shadow": 0,
     "no-new": 0,

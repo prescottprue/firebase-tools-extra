@@ -1,63 +1,46 @@
 import * as admin from "firebase-admin";
-import { isString, get } from "lodash";
-import path from "path";
-import fs from "fs";
+import { get } from "lodash";
+import { join } from "path";
+import { existsSync, readFileSync } from "fs";
 import { DEFAULT_TEST_FOLDER_PATH, FALLBACK_TEST_FOLDER_PATH } from "./constants";
 
 export const DEFAULT_BASE_PATH = process.cwd();
 
 /**
+ * Check whether a value is a string or not
+ * @param valToCheck - Value to check
+ */
+function isString(valToCheck: any): boolean {
+  return typeof valToCheck === 'string' || valToCheck instanceof String
+}
+
+/**
  * Get settings from firebaserc file
- * @return {Object} Firebase settings object
+ * @param filePath - Path for file
+ * @returns Firebase settings object
  */
 export function readJsonFile(filePath: string): any {
-  if (!fs.existsSync(filePath)) {
+  if (!existsSync(filePath)) {
     return {};
   }
 
   try {
-    return JSON.parse(fs.readFileSync(filePath, "utf8"));
-  }
- catch (err) {
-    /* eslint-disable no-console */
+    const fileBuffer = readFileSync(filePath, 'utf8')
+    return JSON.parse(fileBuffer.toString());
+  } catch (err) {
     console.error(
       `Unable to parse ${filePath.replace(
         DEFAULT_BASE_PATH,
         ""
       )} - JSON is most likley not valid`
     );
-    /* eslint-enable no-console */
     return {};
   }
 }
 
-interface DataItem {
-  id: string
-  data: any
-}
-
-// type QueryOrDocumentSnapshot = admin.firestore.QuerySnapshot & admin.firestore.DocumentSnapshot
-/**
- * Create data object with values for each document with keys being doc.id.
- * @param  {firebase.database.DataSnapshot} snapshot - Data for which to create
- * an ordered array.
- * @return {Object|Null} Object documents from snapshot or null
- */
-export function dataArrayFromSnap(snap: admin.firestore.QuerySnapshot | admin.firestore.DocumentSnapshot): DataItem[] {
-  const data = [];
-  if (snap instanceof admin.firestore.DocumentSnapshot && snap.data && snap.exists) {
-    data.push({ id: snap.id, data: snap.data() });
-  } else if (snap instanceof admin.firestore.QuerySnapshot && snap.forEach) {
-    snap.forEach(doc => {
-      data.push({ id: doc.id, data: doc.data() || doc });
-    });
-  }
-  return data;
-}
-
 /**
  * Parse fixture path string into JSON with error handling
- * @param {String} unparsed - Unparsed string to be parsed into JSON
+ * @param unparsed - Unparsed string to be parsed into JSON
  */
 export function parseFixturePath(unparsed: string): any {
   if (isString(unparsed)) {
@@ -70,6 +53,10 @@ export function parseFixturePath(unparsed: string): any {
   return unparsed;
 }
 
+/**
+ * Get slug representing the environment (from CI environment variables).
+ * Defaults to "stage"
+ */
 function getEnvironmentSlug(): string {
   return (
     process.env.CI_ENVIRONMENT_SLUG || process.env.CI_COMMIT_REF_SLUG || "stage"
@@ -81,26 +68,32 @@ function getEnvironmentSlug(): string {
  * within CI. Falls back to staging (i.e. STAGE)
  * @returns Environment prefix string
  */
-export function getEnvPrefix(envName?: string): string {
+function getEnvPrefix(envName?: string): string {
   const envSlug = envName || getEnvironmentSlug();
   return `${envSlug.toUpperCase()}_`;
 }
 
+/**
+ * Get path to local service account
+ * @param envName - Environment option
+ * @returns Path to service account
+ */
 function getServiceAccountPath(envName?: string): string {
-  const withPrefix = path.join(
+  const withSuffix = join(
     DEFAULT_BASE_PATH,
-    `serviceAccount-${envName}.json`
+    `serviceAccount-${envName || ''}.json`,
   );
-  if (fs.existsSync(withPrefix)) {
-    return withPrefix;
+  if (existsSync(withSuffix)) {
+    return withSuffix;
   }
-  return path.join(DEFAULT_BASE_PATH, "serviceAccount.json");
+  return join(DEFAULT_BASE_PATH, 'serviceAccount.json');
 }
 
 /**
  * Get environment variable based on the current CI environment
- * @param  {String} varNameRoot - variable name without the environment prefix
- * @return {Any} Value of the environment variable
+ * @param varNameRoot - variable name without the environment prefix
+ * @param envName - Environment option
+ * @returns Value of the environment variable
  * @example
  * envVarBasedOnCIEnv('FIREBASE_PROJECT_ID')
  * // => 'fireadmin-stage' (value of 'STAGE_FIREBASE_PROJECT_ID' environment var)
@@ -108,24 +101,33 @@ function getServiceAccountPath(envName?: string): string {
 export function envVarBasedOnCIEnv(varNameRoot: string, envName?: string): any {
   const prefix = getEnvPrefix(envName);
   const combined = `${prefix}${varNameRoot}`;
-  const localTestConfigPath = path.join(
+  const localTestConfigPath = join(
     DEFAULT_BASE_PATH,
     DEFAULT_TEST_FOLDER_PATH,
     "config.json"
   );
 
-  if (fs.existsSync(localTestConfigPath)) {
-    const configObj = require(localTestConfigPath); // eslint-disable-line global-require, import/no-dynamic-require, @typescript-eslint/no-var-requires
-    return configObj[combined] || configObj[varNameRoot];
+  // Config file used for environment (local, containers) from main test path ({integrationFolder}/config.json)
+  if (existsSync(localTestConfigPath)) {
+    const localConfigObj = readJsonFile(localTestConfigPath);
+    const valueFromLocalConfig =
+      localConfigObj[combined] || localConfigObj[varNameRoot];
+    if (valueFromLocalConfig) {
+      return valueFromLocalConfig;
+    }
   }
-  const fallbackConfigPath = path.join(
+  const fallbackConfigPath = join(
     DEFAULT_BASE_PATH,
     FALLBACK_TEST_FOLDER_PATH,
     "config.json"
   );
-  if (fs.existsSync(fallbackConfigPath)) {
-    const configObj = require(fallbackConfigPath); // eslint-disable-line global-require, import/no-dynamic-require, @typescript-eslint/no-var-requires
-    return configObj[combined] || configObj[varNameRoot];
+  // Config file used for environment from main cypress environment file (cypress.env.json)
+  if (existsSync(fallbackConfigPath)) {
+    const configObj = readJsonFile(fallbackConfigPath);
+    const valueFromCypressEnv = configObj[combined] || configObj[varNameRoot];
+    if (valueFromCypressEnv) {
+      return valueFromCypressEnv;
+    }
   }
 
   // CI Environment (environment variables loaded directly)
@@ -181,19 +183,17 @@ interface ServiceAccount {
 
 /**
  * Get service account from either local file or environment variables
- * @return {Object} Service account object
- */
-/**
- * Get service account from either local file or environment variables
- * @return {Object} Service account object
+ * @returns Service account object
  */
 export function getServiceAccount(envSlug?: string): ServiceAccount {
   const serviceAccountPath = getServiceAccountPath(envSlug);
+
   // Check for local service account file (Local dev)
-  if (fs.existsSync(serviceAccountPath)) {
+  if (existsSync(serviceAccountPath)) {
     return require(serviceAccountPath); // eslint-disable-line global-require, import/no-dynamic-require
   }
-  // Use environment variables (CI)
+
+  // Use single environment variable for service account object (CI)
   const serviceAccountEnvVar = envVarBasedOnCIEnv("SERVICE_ACCOUNT", envSlug);
   if (serviceAccountEnvVar) {
     if (typeof serviceAccountEnvVar === "string") {
@@ -209,6 +209,7 @@ export function getServiceAccount(envSlug?: string): ServiceAccount {
     }
     return serviceAccountEnvVar;
   }
+
   const clientId = envVarBasedOnCIEnv("FIREBASE_CLIENT_ID", envSlug);
   if (clientId) {
     /* eslint-disable no-console */
@@ -217,7 +218,9 @@ export function getServiceAccount(envSlug?: string): ServiceAccount {
     );
     /* eslint-enable no-console */
   }
+
   /* eslint-disable @typescript-eslint/camelcase */
+  // Multiple environment variables to build object (CI)
   return {
     type: "service_account",
     project_id: envVarBasedOnCIEnv("FIREBASE_PROJECT_ID", envSlug),
@@ -238,10 +241,9 @@ let fbInstance: admin.app.App;
 /**
  * Initialize Firebase instance from service account (from either local
  * serviceAccount.json or environment variables)
- * @return {Firebase} Initialized Firebase instance
+ * @returns Initialized Firebase instance
  */
 export function initializeFirebase(): admin.app.App {
-  
   try {
     // Get service account from local file falling back to environment variables
     if (!fbInstance) {
@@ -265,12 +267,12 @@ export function initializeFirebase(): admin.app.App {
           "top-agent-int"
         );
 
-          fbInstance = admin.initializeApp({
-            credential: admin.credential.cert((serviceAccount as any)),
-            databaseURL: `https://${cleanProjectId}.firebaseio.com`
-          });
-        }
+        fbInstance = admin.initializeApp({
+          credential: admin.credential.cert((serviceAccount as any)),
+          databaseURL: `https://${cleanProjectId}.firebaseio.com`
+        });
       }
+    }
     return fbInstance;
   } catch (err) {
     /* eslint-disable no-console */
@@ -284,31 +286,26 @@ export function initializeFirebase(): admin.app.App {
 
 /**
  * Convert slash path to Firestore reference
- * @param  {firestore.Firestore} firestoreInstance - Instance on which to
+ * @param firestoreInstance - Instance on which to
  * create ref
- * @param  {String} slashPath - Path to convert into firestore refernce
- * @return {firestore.CollectionReference|firestore.DocumentReference}
+ * @param slashPath - Path to convert into firestore refernce
+ * @param options - Options object
+ * @returns Ref at slash path
  */
 export function slashPathToFirestoreRef(
   firestoreInstance: any,
   slashPath: string,
-  options?: any
-): admin.firestore.CollectionReference & admin.firestore.DocumentReference {
-  let ref = firestoreInstance;
-  const srcPathArr = slashPath.split("/");
-  srcPathArr.forEach(pathSegment => {
-    if (ref.collection) {
-      ref = ref.collection(pathSegment);
-    } else if (ref.doc) {
-      ref = ref.doc(pathSegment);
-    } else {
-      throw new Error(`Invalid slash path: ${slashPath}`);
-    }
-  });
+  options?: any,
+): admin.firestore.CollectionReference | admin.firestore.DocumentReference | admin.firestore.Query {
+  const isDocPath = slashPath.split('/').length % 2;
+  
+ const ref = isDocPath
+    ? firestoreInstance.collection(slashPath)
+    : firestoreInstance.doc(slashPath);
 
   // Apply limit to query if it exists
-  if (options && options.limit && typeof ref.limit === "function") {
-    ref = ref.limit(options.limit);
+  if (options && options.limit && typeof ref.limit === 'function') {
+    return ref.limit(options.limit);
   }
 
   return ref;
@@ -318,8 +315,8 @@ export function slashPathToFirestoreRef(
  * Create command arguments string from an array of arguments by joining them
  * with a space including a leading space. If no args provided, empty string
  * is returned
- * @param  {Array} args - Command arguments to convert into a string
- * @return {String} Arguments section of command string
+ * @param args - Command arguments to convert into a string
+ * @returns Arguments section of command string
  */
 export function getArgsString(args: string[]): string {
   return args && args.length ? ` ${args.join(" ")}` : "";

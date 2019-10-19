@@ -1,7 +1,7 @@
 import * as admin from 'firebase-admin'
 import { isObject, isDate, isString } from "lodash";
-import fs from "fs";
-import path from "path";
+import { existsSync, readFileSync } from "fs";
+import { join, extname } from "path";
 import {
   parseFixturePath,
   slashPathToFirestoreRef,
@@ -23,7 +23,7 @@ import {
  * @param fixturePath - Fixture's path from root
  */
 function readJsonFixture(fixturePath: string): any {
-  const fixtureStringBuffer = fs.readFileSync(fixturePath);
+  const fixtureStringBuffer = readFileSync(fixturePath);
   try {
     return JSON.parse(fixtureStringBuffer.toString());
   } catch (err) {
@@ -37,27 +37,27 @@ function readJsonFixture(fixturePath: string): any {
  * @param fixturePath - Relative path of fixture file
  */
 function readFixture(fixturePath: string): any {
-  let fixturesPath = path.join(DEFAULT_TEST_FOLDER_PATH, "fixtures");
+  let fixturesPath = join(DEFAULT_TEST_FOLDER_PATH, "fixtures");
   // Confirm fixture exists
-  let pathToFixtureFile = path.join(fixturesPath, fixturePath);
+  let pathToFixtureFile = join(fixturesPath, fixturePath);
 
-  if (!fs.existsSync(pathToFixtureFile)) {
-    fixturesPath = path.join(FALLBACK_TEST_FOLDER_PATH, "fixtures");
+  if (!existsSync(pathToFixtureFile)) {
+    fixturesPath = join(FALLBACK_TEST_FOLDER_PATH, "fixtures");
     // Confirm fixture exists
-    const newPathToFixture = path.join(fixturesPath, fixturePath);
-    if (!fs.existsSync(newPathToFixture)) {
+    const newPathToFixture = join(fixturesPath, fixturePath);
+    if (!existsSync(newPathToFixture)) {
       throw new Error(
         `Fixture not found at path: ${pathToFixtureFile} or ${newPathToFixture}`
       );
     }
     pathToFixtureFile = newPathToFixture;
   }
-  const fixtureFileExtension = path.extname(fixturePath);
+  const fixtureFileExtension = extname(fixturePath);
   switch (fixtureFileExtension) {
     case ".json":
       return readJsonFixture(pathToFixtureFile);
     default:
-      return fs.readFileSync(pathToFixtureFile);
+      return readFileSync(pathToFixtureFile);
   }
 }
 
@@ -65,6 +65,9 @@ export interface FirestoreCommandOptions {
   projectId?: string
   disableYes?: boolean
   shallow?: boolean
+  /**
+   * Whether or not to recursivley delete
+   */
   recursive?: boolean
 }
 
@@ -90,6 +93,10 @@ function addDefaultArgs(args: string[], opts: FirestoreCommandOptions): string[]
   return newArgs;
 }
 
+/**
+ * Add command line options to args
+ * @param opts - Options for args
+ */
 function optionsToArgs(opts: FirestoreCommandOptions) {
   const { shallow, recursive } = opts;
   const newArgs = [];
@@ -102,10 +109,25 @@ function optionsToArgs(opts: FirestoreCommandOptions) {
   return newArgs;
 }
 
+/**
+ * Options for firestore commands
+ */
 export interface FirestoreCommandOptions {
+  /**
+   * Whether or not to include meta data
+   */
   withMeta?: boolean;
+  /**
+   * Extra arguments to add to CLI call
+   */
   args?: string[];
+  /**
+   * CI token to pass as argument
+   */
   token?: string;
+  /**
+   * Whether or not to recursivley delete
+   */
   recursive?: boolean;
 }
 
@@ -166,12 +188,12 @@ export function buildFirestoreCommand(
 export type FirestoreAction = 'get' | 'set' | 'update' | 'delete'
 
 /**
- *
+ * Run action for Firestore
  * @param action - Firestore action to run
  * @param actionPath - Path at which Firestore action should be run
  * @param thirdArg - Either path to fixture or string containing object
  * of options (parsed by cy.callFirestore custom Cypress command)
- * @param withMeta -
+ * @param withMeta - Whether or not to include meta data
  */
 export default async function firestoreAction(
   action: FirestoreAction = "set",
@@ -225,14 +247,14 @@ export default async function firestoreAction(
   }
 
   // Confirm ref has action as a method
-  if (typeof ref[action] !== "function") {
+  if (typeof (ref as any)[action] !== "function") {
     const missingActionErr = `Ref at provided path "${actionPath}" does not have action "${action}"`;
     throw new Error(missingActionErr);
   }
 
   try {
     // Call action with fixture data
-    const res = await (ref[action] as any)(options)
+    const res = await (ref as any)[action](options)
 
     const dataToWrite = typeof res.data === 'function' ? res.data() : res.docs
 

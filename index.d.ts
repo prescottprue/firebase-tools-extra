@@ -1,24 +1,15 @@
 declare module "constants" {
     export const DEFAULT_TEST_FOLDER_PATH = "test/e2e";
     export const FALLBACK_TEST_FOLDER_PATH = "cypress";
-    export const DEFAULT_SERVICE_ACCOUNT_PATH = "serviceAccount.json";
-    export const DEFAULT_TEST_ENV_FILE_PATH = "cypress.env.json";
-    export const DEFAULT_CONFIG_FILE_PATH = "config.json";
     export const FIREBASE_TOOLS_BASE_COMMAND = "$(npm bin)/firebase";
     export const FIREBASE_EXTRA_PATH = "$(npm bin)/firebase-extra";
     export const FIREBASE_TOOLS_YES_ARGUMENT = "-y";
-    export const DEFAULT_BASE_PATH: string;
 }
 declare module "utils" {
     import * as admin from "firebase-admin";
+    export const DEFAULT_BASE_PATH: string;
     export function readJsonFile(filePath: string): any;
-    interface DataItem {
-        id: string;
-        data: any;
-    }
-    export function dataArrayFromSnap(snap: admin.firestore.QuerySnapshot | admin.firestore.DocumentSnapshot): DataItem[];
     export function parseFixturePath(unparsed: string): any;
-    export function getEnvPrefix(envName?: string): string;
     export function envVarBasedOnCIEnv(varNameRoot: string, envName?: string): any;
     interface ServiceAccount {
         type: string;
@@ -34,7 +25,7 @@ declare module "utils" {
     }
     export function getServiceAccount(envSlug?: string): ServiceAccount;
     export function initializeFirebase(): admin.app.App;
-    export function slashPathToFirestoreRef(firestoreInstance: any, slashPath: string, options?: any): admin.firestore.CollectionReference & admin.firestore.DocumentReference;
+    export function slashPathToFirestoreRef(firestoreInstance: any, slashPath: string, options?: any): admin.firestore.CollectionReference | admin.firestore.DocumentReference | admin.firestore.Query;
     export function getArgsString(args: string[]): string;
 }
 declare module "commands/firestore" {
