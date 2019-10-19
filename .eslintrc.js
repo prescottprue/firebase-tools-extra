@@ -1,6 +1,12 @@
 module.exports = {
   parser: '@typescript-eslint/parser',
-  'extends': ['airbnb-base', 'prettier', 'plugin:@typescript-eslint/recommended', "prettier/@typescript-eslint"],
+  'extends': [
+    'airbnb-base',
+    'prettier',
+    'plugin:@typescript-eslint/recommended',
+    'prettier/@typescript-eslint',
+    "plugin:jsdoc/recommended"
+  ],
   root: true,
   plugins: ['@typescript-eslint', 'prettier'],
   settings: {
@@ -21,7 +27,11 @@ module.exports = {
     "no-shadow": 0,
     "no-new": 0,
     "new-cap": 0,
-    "max-len": 0
+    "max-len": 0,
+    'no-return-await': 2,
+    'jsdoc/newline-after-description': 0,
+    'jsdoc/require-returns-type': 0,
+    'jsdoc/require-param-type': 0,
   },
   overrides: [
     {

@@ -9,6 +9,7 @@ export const DEFAULT_BASE_PATH = process.cwd();
 /**
  * Check whether a value is a string or not
  * @param valToCheck - Value to check
+ * @returns Whether or not value is a string
  */
 function isString(valToCheck: any): boolean {
   return typeof valToCheck === 'string' || valToCheck instanceof String
@@ -43,6 +44,7 @@ export function readJsonFile(filePath: string): any {
 /**
  * Parse fixture path string into JSON with error handling
  * @param unparsed - Unparsed string to be parsed into JSON
+ * @returns Parsed fixture value or path
  */
 export function parseFixturePath(unparsed: string): any {
   if (isString(unparsed)) {
@@ -58,6 +60,7 @@ export function parseFixturePath(unparsed: string): any {
 /**
  * Get slug representing the environment (from CI environment variables).
  * Defaults to "stage"
+ * @returns Environment slug
  */
 function getEnvironmentSlug(): string {
   return (
@@ -68,6 +71,7 @@ function getEnvironmentSlug(): string {
 /**
  * Get prefix for current environment based on environment vars available
  * within CI. Falls back to staging (i.e. STAGE)
+ * @param envName - Environment option
  * @returns Environment prefix string
  */
 function getEnvPrefix(envName?: string): string {
@@ -185,6 +189,7 @@ interface ServiceAccount {
 
 /**
  * Get service account from either local file or environment variables
+ * @param envSlug - Slug for current environment
  * @returns Service account object
  */
 export function getServiceAccount(envSlug?: string): ServiceAccount {
