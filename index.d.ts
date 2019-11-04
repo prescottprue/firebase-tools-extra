@@ -8,6 +8,7 @@ declare module "constants" {
 declare module "utils" {
     import * as admin from "firebase-admin";
     export const DEFAULT_BASE_PATH: string;
+    export function isString(valToCheck: any): boolean;
     export function readJsonFile(filePath: string): any;
     export function parseFixturePath(unparsed: string): any;
     export function envVarBasedOnCIEnv(varNameRoot: string, envName?: string): any;
@@ -33,9 +34,6 @@ declare module "commands/firestore" {
         projectId?: string;
         disableYes?: boolean;
         shallow?: boolean;
-        recursive?: boolean;
-    }
-    export interface FirestoreCommandOptions {
         withMeta?: boolean;
         args?: string[];
         token?: string;

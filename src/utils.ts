@@ -11,7 +11,7 @@ export const DEFAULT_BASE_PATH = process.cwd();
  * @param valToCheck - Value to check
  * @returns Whether or not value is a string
  */
-function isString(valToCheck: any): boolean {
+export function isString(valToCheck: any): boolean {
   return typeof valToCheck === 'string' || valToCheck instanceof String
 }
 

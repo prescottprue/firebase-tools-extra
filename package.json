@@ -1,6 +1,6 @@
 {
   "name": "firebase-tools-extra",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Extra methods for firebase-tools which support using a service account.",
   "main": "lib/index.js",
   "module": "lib/index.js",
@@ -27,7 +27,7 @@
     "test": "ts-mocha -p ./tsconfig.json test/**/*.spec.ts --exit",
     "watch": "npm run build:commonjs -- --watch",
     "watch:es": "npm run build:es -- --watch",
-    "lint": "eslint src/**.ts --ext .ts",
+    "lint": "eslint src/**/*.ts --ext .ts",
     "lint:fix": "npm run lint -- --fix",
     "prepare": "npm run clean && npm run build",
     "prepush": "npm run lint"
@@ -38,9 +38,9 @@
     "cli"
   ],
   "dependencies": {
-    "firebase-admin": "^8.6.1",
+    "firebase-admin": "^8.7.0",
     "lodash": "^4.17.15",
-    "yargs": "^14.0.0"
+    "yargs": "^14.2.0"
   },
   "devDependencies": {
     "@types/lodash": "^4.14.144",
@@ -48,18 +48,18 @@
     "@types/yargs": "^13.0.2",
     "@typescript-eslint/eslint-plugin": "^2.4.0",
     "@typescript-eslint/parser": "^2.4.0",
-    "cross-env": "^5.2.0",
-    "eslint": "^6.5.1",
+    "cross-env": "^6.0.3",
+    "eslint": "^6.6.0",
     "eslint-config-airbnb-base": "^14.0.0",
-    "eslint-config-prettier": "^6.4.0",
+    "eslint-config-prettier": "^6.5.0",
     "eslint-plugin-import": "^2.18.2",
-    "eslint-plugin-jsdoc": "^15.9.2",
+    "eslint-plugin-jsdoc": "^17.0.1",
     "eslint-plugin-jsx-a11y": "^6.2.3",
     "eslint-plugin-prettier": "^3.1.0",
-    "husky": "^3.0.4",
+    "husky": "^3.0.9",
     "prettier": "^1.18.2",
     "rimraf": "^3.0.0",
-    "typescript": "^3.6.2"
+    "typescript": "^3.6.4"
   },
   "license": "MIT",
   "repository": {
