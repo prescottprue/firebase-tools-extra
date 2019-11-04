@@ -1,5 +1,5 @@
 import * as admin from 'firebase-admin'
-import { isObject, isDate, isString } from "lodash";
+import { isObject, isDate } from "lodash";
 import { existsSync, readFileSync } from "fs";
 import { join, extname } from "path";
 import {
@@ -7,7 +7,8 @@ import {
   slashPathToFirestoreRef,
   initializeFirebase,
   envVarBasedOnCIEnv,
-  getArgsString
+  getArgsString,
+  isString
 } from "../utils";
 import {
   FIREBASE_TOOLS_BASE_COMMAND,
@@ -17,10 +18,10 @@ import {
   FALLBACK_TEST_FOLDER_PATH
 } from "../constants";
 
-
 /**
  * Load fixture and parse into JSON
  * @param fixturePath - Fixture's path from root
+ * @returns Fixture data
  */
 function readJsonFixture(fixturePath: string): any {
   const fixtureStringBuffer = readFileSync(fixturePath);
@@ -35,6 +36,7 @@ function readJsonFixture(fixturePath: string): any {
 /**
  * Read fixture file provided relative path
  * @param fixturePath - Relative path of fixture file
+ * @returns Fixture data
  */
 function readFixture(fixturePath: string): any {
   let fixturesPath = join(DEFAULT_TEST_FOLDER_PATH, "fixtures");
@@ -61,22 +63,13 @@ function readFixture(fixturePath: string): any {
   }
 }
 
-export interface FirestoreCommandOptions {
-  projectId?: string
-  disableYes?: boolean
-  shallow?: boolean
-  /**
-   * Whether or not to recursivley delete
-   */
-  recursive?: boolean
-}
-
 /**
  * Add default Firebase arguments to arguments array.
  * @param args - arguments array
  * @param [opts={}] - Options object
  * @param [opts.disableYes=false] - Whether or not to disable the
  * yes argument
+ * @returns List of default args
  */
 function addDefaultArgs(args: string[], opts: FirestoreCommandOptions): string[] {
   const { projectId, disableYes = false } = opts;
@@ -96,8 +89,9 @@ function addDefaultArgs(args: string[], opts: FirestoreCommandOptions): string[]
 /**
  * Add command line options to args
  * @param opts - Options for args
+ * @returns List of command options with args
  */
-function optionsToArgs(opts: FirestoreCommandOptions) {
+function optionsToArgs(opts: FirestoreCommandOptions): string[] {
   const { shallow, recursive } = opts;
   const newArgs = [];
   if (recursive) {
@@ -113,6 +107,9 @@ function optionsToArgs(opts: FirestoreCommandOptions) {
  * Options for firestore commands
  */
 export interface FirestoreCommandOptions {
+  projectId?: string
+  disableYes?: boolean
+  shallow?: boolean
   /**
    * Whether or not to include meta data
    */
@@ -137,11 +134,10 @@ export interface FirestoreCommandOptions {
  * exist in environment if running commands that call firebase-tools.
  * @param action - action to run on Firstore (i.e. "add", "delete")
  * @param actionPath - Firestore path where action should be run
- * @param fixturePath - Path to fixture. If object is passed,
- * it is used as options.
+ * @param data - Path to fixture. If object is passed, it is used as options.
  * @param [opts={}] - Options object
  * @param opts.args - Extra arguments to be passed with command
- * @return Command string to be used with cy.exec
+ * @returns Command string to be used with cy.exec
  */
 export function buildFirestoreCommand(
   action: string,
@@ -194,6 +190,7 @@ export type FirestoreAction = 'get' | 'set' | 'update' | 'delete'
  * @param thirdArg - Either path to fixture or string containing object
  * of options (parsed by cy.callFirestore custom Cypress command)
  * @param withMeta - Whether or not to include meta data
+ * @returns Action within Firestore
  */
 export default async function firestoreAction(
   action: FirestoreAction = "set",
@@ -255,8 +252,14 @@ export default async function firestoreAction(
   try {
     // Call action with fixture data
     const res = await (ref as any)[action](options)
-
-    const dataToWrite = typeof res.data === 'function' ? res.data() : res.docs
+    const dataToWrite = typeof res.data === 'function'
+      ? res.data()
+      : res.docs && res.docs.map((docSnap: admin.firestore.DocumentSnapshot) => {
+        return {
+          ...docSnap.data(),
+          id: docSnap.id
+        }
+      })
 
     // Write results to stdout to be loaded in tests
     if (action === "get") {
