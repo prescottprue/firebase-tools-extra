@@ -1,6 +1,6 @@
 {
   "name": "firebase-tools-extra",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "Extra methods for firebase-tools which support using a service account.",
   "main": "lib/index.js",
   "module": "lib/index.js",
@@ -59,7 +59,7 @@
     "husky": "^3.0.9",
     "prettier": "^1.18.2",
     "rimraf": "^3.0.0",
-    "typescript": "^3.6.4"
+    "typescript": "^3.7.3"
   },
   "license": "MIT",
   "repository": {
