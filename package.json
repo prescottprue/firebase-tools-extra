@@ -22,15 +22,11 @@
     "build:typefile": "tsc --declaration --outFile index.d.ts --emitDeclarationOnly",
     "build:lib": "tsc",
     "build:esm": "tsc && tsc -m es6 --outDir lib-esm",
-    "emulate": "firebase serve --only firestore",
-    "test:full": "concurrently \"npm run emulate\" \"wait-port -o silent 8080 && npm run test\"",
-    "test": "ts-mocha -p ./tsconfig.json test/**/*.spec.ts --exit",
     "watch": "npm run build:commonjs -- --watch",
     "watch:es": "npm run build:es -- --watch",
     "lint": "eslint src/**/*.ts --ext .ts",
     "lint:fix": "npm run lint -- --fix",
-    "prepare": "npm run clean && npm run build",
-    "prepush": "npm run lint"
+    "prepare": "npm run clean && npm run build"
   },
   "keywords": [
     "firebase-tools",
@@ -38,20 +34,16 @@
     "cli"
   ],
   "dependencies": {
-    "firebase-admin": "^8.7.0",
+    "firebase-admin": "^8.8.0",
     "lodash": "^4.17.15",
     "yargs": "^14.2.0"
   },
   "devDependencies": {
-    "@firebase/testing": "^0.16.1",
     "@types/lodash": "^4.14.144",
     "@types/node": "^12.11.1",
     "@types/yargs": "^13.0.2",
     "@typescript-eslint/eslint-plugin": "^2.4.0",
     "@typescript-eslint/parser": "^2.4.0",
-    "chai": "^4.2.0",
-    "concurrently": "^5.0.0",
-    "cross-env": "^6.0.3",
     "eslint": "^6.6.0",
     "eslint-config-airbnb-base": "^14.0.0",
     "eslint-config-prettier": "^6.5.0",
@@ -59,13 +51,10 @@
     "eslint-plugin-jsdoc": "^17.0.1",
     "eslint-plugin-jsx-a11y": "^6.2.3",
     "eslint-plugin-prettier": "^3.1.0",
-    "husky": "^3.0.9",
-    "mocha": "^6.2.2",
-    "prettier": "^1.18.2",
+    "husky": "^3.1.0",
+    "prettier": "^1.19.1",
     "rimraf": "^3.0.0",
-    "ts-mocha": "^6.0.0",
-    "typescript": "^3.7.3",
-    "wait-port": "^0.2.6"
+    "typescript": "^3.7.3"
   },
   "license": "MIT",
   "repository": {
@@ -78,5 +67,10 @@
   "author": {
     "name": "Prescott Prue",
     "url": "https://github.com/prescottprue"
+  },
+  "husky": {
+    "hooks": {
+      "pre-push": "npm run lint"
+    }
   }
 }
