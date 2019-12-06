@@ -246,12 +246,16 @@ export function getServiceAccount(envSlug?: string): ServiceAccount {
 let fbInstance: admin.app.App;
 
 /**
- * @returns 
+ * Get projectId for emulated project. Attempts to load from
+ * FIREBASE_PROJECT or FIREBASE_PROJECT_ID from environment variables
+ * within node environment or from the cypress environment. If not
+ * found within environment, falls back to serviceAccount.json file
+ * then defaults to "test".
+ * @returns projectId for emulated project
  */
 function getEmulatedProjectId(): string {
   const FIREBASE_PROJECT = envVarBasedOnCIEnv("FIREBASE_PROJECT")
   if (FIREBASE_PROJECT) {
-    console.log('Loaded projectId from FIREBASE_PROJECT')
     return FIREBASE_PROJECT
   }
   const FIREBASE_PROJECT_ID = envVarBasedOnCIEnv("FIREBASE_PROJECT_ID")
@@ -261,10 +265,15 @@ function getEmulatedProjectId(): string {
   // Get service account from local file falling back to environment variables
   const serviceAccount = getServiceAccount();
   const projectIdFromSA = get(serviceAccount, "project_id");
-  console.log('Loaded projectId from service account')
   return projectIdFromSA || 'test'
 }
 
+/**
+ * Get settings for Firestore from environment. Loads port and servicePath from
+ * FIRESTORE_EMULATOR_HOST node environment variable if found, otherwise
+ * defaults to port 8080 and servicePath "localhost".
+ * @returns Firestore settings to be passed to firebase.firestore().settings
+ */
 function firestoreSettingsFromEnv(): FirebaseFirestore.Settings {
   const { FIRESTORE_EMULATOR_HOST } = process.env
   if (typeof FIRESTORE_EMULATOR_HOST === 'undefined' || !isString(FIRESTORE_EMULATOR_HOST)) {
