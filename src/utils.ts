@@ -246,21 +246,69 @@ export function getServiceAccount(envSlug?: string): ServiceAccount {
 let fbInstance: admin.app.App;
 
 /**
+ * Get projectId for emulated project. Attempts to load from
+ * FIREBASE_PROJECT or FIREBASE_PROJECT_ID from environment variables
+ * within node environment or from the cypress environment. If not
+ * found within environment, falls back to serviceAccount.json file
+ * then defaults to "test".
+ * @returns projectId for emulated project
+ */
+function getEmulatedProjectId(): string {
+  const FIREBASE_PROJECT = envVarBasedOnCIEnv("FIREBASE_PROJECT")
+  if (FIREBASE_PROJECT) {
+    return FIREBASE_PROJECT
+  }
+  const FIREBASE_PROJECT_ID = envVarBasedOnCIEnv("FIREBASE_PROJECT_ID")
+  if (FIREBASE_PROJECT_ID) {
+    return FIREBASE_PROJECT_ID
+  }
+  // Get service account from local file falling back to environment variables
+  const serviceAccount = getServiceAccount();
+  const projectIdFromSA = get(serviceAccount, "project_id");
+  return projectIdFromSA || 'test'
+}
+
+/**
+ * Get settings for Firestore from environment. Loads port and servicePath from
+ * FIRESTORE_EMULATOR_HOST node environment variable if found, otherwise
+ * defaults to port 8080 and servicePath "localhost".
+ * @returns Firestore settings to be passed to firebase.firestore().settings
+ */
+function firestoreSettingsFromEnv(): FirebaseFirestore.Settings {
+  const { FIRESTORE_EMULATOR_HOST } = process.env
+  if (typeof FIRESTORE_EMULATOR_HOST === 'undefined' || !isString(FIRESTORE_EMULATOR_HOST)) {
+    return {
+      servicePath: 'localhost',
+      port: 8080
+    }
+  }
+  const [servicePath, portStr] = FIRESTORE_EMULATOR_HOST.split(':')
+  return {
+    servicePath,
+    port: parseInt(portStr, 10)
+  }
+}
+
+/**
  * Initialize Firebase instance from service account (from either local
  * serviceAccount.json or environment variables)
  * @returns Initialized Firebase instance
  */
 export function initializeFirebase(): admin.app.App {
   try {
-    // Get service account from local file falling back to environment variables
     if (!fbInstance) {
+      // Use emulator if it exists in environment
       if (process.env.FIRESTORE_EMULATOR_HOST) {
-        fbInstance = admin.initializeApp({ projectId: 'test' })
-        admin.firestore().settings({
-          servicePath: 'localhost',
-          port: 8080
-        });
+        // TODO: Look into using @firebase/testing in place of admin here to allow for
+        // usage of clearFirestoreData (see https://github.com/prescottprue/cypress-firebase/issues/73 for more info)
+        const projectId = getEmulatedProjectId()
+        // TODO: add initializing with databaseURL from FIREBASE_DATABASE_EMULATOR_HOST to allow for RTDB actions
+        // within Emulator
+        fbInstance = admin.initializeApp({ projectId })
+        const firestoreSettings = firestoreSettingsFromEnv()
+        admin.firestore().settings(firestoreSettings)
       } else {
+        // Get service account from local file falling back to environment variables
         const serviceAccount = getServiceAccount();
         const projectId = get(serviceAccount, "project_id");
         if (!isString(projectId)) {
