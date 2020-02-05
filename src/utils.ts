@@ -309,7 +309,6 @@ export function initializeFirebase(): admin.app.App {
         if (process.env.FIREBASE_DATABASE_EMULATOR_HOST) {
           const [, portStr] = process.env.FIREBASE_DATABASE_EMULATOR_HOST.split(':')
           fbConfig.databaseURL = `http://localhost:${portStr || '9000'}?ns=${fbConfig.projectId || 'local'}`
-          console.log('Using datbase emulator')
         }
 
         fbInstance = admin.initializeApp(fbConfig)
@@ -362,6 +361,9 @@ export function slashPathToFirestoreRef(
   slashPath: string,
   options?: any
 ): admin.firestore.CollectionReference | admin.firestore.DocumentReference | admin.firestore.Query {
+  if (!slashPath) {
+    throw new Error('Path is required to make Firestore Reference')
+  }
   const isDocPath = slashPath.split('/').length % 2;
   
  const ref = isDocPath
