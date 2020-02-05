@@ -2,6 +2,7 @@
 /* eslint-disable consistent-return, @typescript-eslint/no-var-requires, @typescript-eslint/explicit-function-return-type */
 const yargs = require('yargs');
 const firestoreAction = require('../lib').default;
+const { rtdbAction } = require('../lib');
 
 const commands = [
   {
@@ -32,6 +33,62 @@ const commands = [
       }
       return argv;
     }
+  },
+  {
+    command: 'database:get [actionPath] [fixturePath]',
+    describe: 'run action on Firebase using service account',
+    builder: (yargsInstance) => {
+      yargsInstance.positional('actionPath', {
+        describe: 'path of action to run on Firestore',
+        default: 'projects/test-project'
+      });
+      yargsInstance.positional('fixturePath', {
+        describe: 'path of fixture to use ',
+        default: 'fakeProject.json'
+      });
+    }
+  },
+  {
+    command: 'database:set [actionPath] [fixturePath]',
+    describe: 'run action on Firebase using service account',
+    builder: (yargsInstance) => {
+      yargsInstance.positional('actionPath', {
+        describe: 'path of action to run on Firestore',
+        default: 'projects/test-project'
+      });
+      yargsInstance.positional('fixturePath', {
+        describe: 'path of fixture to use ',
+        default: 'fakeProject.json'
+      });
+    }
+  },
+  {
+    command: 'database:update [actionPath] [fixturePath]',
+    describe: 'run action on Firebase using service account',
+    builder: (yargsInstance) => {
+      yargsInstance.positional('actionPath', {
+        describe: 'path of action to run on Firestore',
+        default: 'projects/test-project'
+      });
+      yargsInstance.positional('fixturePath', {
+        describe: 'path of fixture to use ',
+        default: 'fakeProject.json'
+      });
+    }
+  },
+  {
+    command: 'database:delete [actionPath] [fixturePath]',
+    describe: 'run action on Firebase using service account',
+    builder: (yargsInstance) => {
+      yargsInstance.positional('actionPath', {
+        describe: 'path of action to run on Firestore',
+        default: 'projects/test-project'
+      });
+      yargsInstance.positional('fixturePath', {
+        describe: 'path of fixture to use ',
+        default: 'fakeProject.json'
+      });
+    }
   }
 ];
 
@@ -54,10 +111,12 @@ const commands = [
       default: false
     });
     const args = argv._ || []
-    return firestoreAction(...args.slice(1));
+    if (args[0] === 'firestore') {
+      return firestoreAction(...args.slice(1));
+    }
+    return rtdbAction(args[0].split(':')[1], ...args.slice(1));
     /* eslint-enable no-unused-expressions */
-  }
- catch (err) {
+  } catch (err) {
     /* eslint-disable no-console */
     console.error(`Error running firebase action: ${err.message || 'Error'} ${err.stack}`);
     /* eslint-enable no-console */

@@ -40,10 +40,16 @@ declare module "commands/firestore" {
         recursive?: boolean;
     }
     export function buildFirestoreCommand(action: string, actionPath: string, data?: any, opts?: FirestoreCommandOptions): string;
-    export type FirestoreAction = 'get' | 'set' | 'update' | 'delete';
-    export default function firestoreAction(action: "update" | "get" | "set" | "delete" | undefined, actionPath: string, thirdArg?: any, withMeta?: boolean): Promise<any>;
+    export type FirestoreAction = 'get' | 'set' | 'add' | 'update' | 'delete';
+    export default function firestoreAction(action: "add" | "update" | "get" | "set" | "delete" | undefined, actionPath: string, thirdArg?: any, withMeta?: boolean): Promise<any>;
+}
+declare module "commands/rtdb" {
+    export type RTDBAction = 'get' | 'set' | 'push' | 'update' | 'delete';
+    export default function rtdbAction(action: "push" | "update" | "get" | "set" | "delete" | undefined, actionPath: string, thirdArg?: any, withMeta?: boolean): Promise<any>;
 }
 declare module "index" {
     import firestoreAction from "commands/firestore";
+    import rtdbAction from "commands/rtdb";
+    export { rtdbAction };
     export default firestoreAction;
 }
