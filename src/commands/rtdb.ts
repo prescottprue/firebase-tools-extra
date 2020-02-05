@@ -2,7 +2,7 @@ import * as admin from 'firebase-admin'
 import { isObject, isDate } from "lodash";
 import { parseFixturePath, initializeFirebase } from "../utils";
 
-export type RTDBAction = 'get' | 'set' | 'push' | 'update' | 'delete'
+export type RTDBAction = 'get' | 'set' | 'push' | 'update' | 'remove'
 
 /**
  * Run action for Firestore
@@ -18,7 +18,6 @@ export default async function rtdbAction(
   thirdArg?: any
 ): Promise<any> {
   const fbInstance = initializeFirebase();
-
   const parsedVal = parseFixturePath(thirdArg);
   const options = parsedVal;
 
@@ -36,7 +35,6 @@ export default async function rtdbAction(
   }
 
   const actionNameMap = {
-    delete: 'remove',
     get: 'once'
   }
 

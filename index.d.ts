@@ -44,8 +44,8 @@ declare module "commands/firestore" {
     export default function firestoreAction(action: "add" | "update" | "get" | "set" | "delete" | undefined, actionPath: string, thirdArg?: any, withMeta?: boolean): Promise<any>;
 }
 declare module "commands/rtdb" {
-    export type RTDBAction = 'get' | 'set' | 'push' | 'update' | 'delete';
-    export default function rtdbAction(action: "push" | "update" | "get" | "set" | "delete" | undefined, actionPath: string, thirdArg?: any, withMeta?: boolean): Promise<any>;
+    export type RTDBAction = 'get' | 'set' | 'push' | 'update' | 'remove';
+    export default function rtdbAction(action: "push" | "update" | "get" | "set" | "remove" | undefined, actionPath: string, thirdArg?: any): Promise<any>;
 }
 declare module "index" {
     import firestoreAction from "commands/firestore";
