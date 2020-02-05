@@ -181,7 +181,7 @@ export function buildFirestoreCommand(
   }
 }
 
-export type FirestoreAction = 'get' | 'set' | 'update' | 'delete'
+export type FirestoreAction = 'get' | 'set' | 'add' | 'update' | 'delete'
 
 /**
  * Run action for Firestore
