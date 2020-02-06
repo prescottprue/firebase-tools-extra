@@ -29,6 +29,7 @@ module.exports = {
     'new-cap': 0,
     'max-len': 0,
     'no-return-await': 2,
+    'import/extensions': 0,
     'jsdoc/newline-after-description': 0,
     'jsdoc/require-returns-type': 0,
     'jsdoc/require-param-type': 0,

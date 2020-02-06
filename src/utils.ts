@@ -87,7 +87,7 @@ function getEnvPrefix(envName?: string): string {
 function getServiceAccountPath(envName?: string): string {
   const withSuffix = join(
     DEFAULT_BASE_PATH,
-    `serviceAccount-${envName || ''}.json`,
+    `serviceAccount-${envName || ''}.json`
   );
   if (existsSync(withSuffix)) {
     return withSuffix;
@@ -298,15 +298,24 @@ export function initializeFirebase(): admin.app.App {
   try {
     if (!fbInstance) {
       // Use emulator if it exists in environment
-      if (process.env.FIRESTORE_EMULATOR_HOST) {
+      if (process.env.FIRESTORE_EMULATOR_HOST || process.env.FIREBASE_DATABASE_EMULATOR_HOST) {
         // TODO: Look into using @firebase/testing in place of admin here to allow for
         // usage of clearFirestoreData (see https://github.com/prescottprue/cypress-firebase/issues/73 for more info)
         const projectId = getEmulatedProjectId()
-        // TODO: add initializing with databaseURL from FIREBASE_DATABASE_EMULATOR_HOST to allow for RTDB actions
+
+        const fbConfig: any = { projectId }
+        // Initialize RTDB with databaseURL from FIREBASE_DATABASE_EMULATOR_HOST to allow for RTDB actions
         // within Emulator
-        fbInstance = admin.initializeApp({ projectId })
-        const firestoreSettings = firestoreSettingsFromEnv()
-        admin.firestore().settings(firestoreSettings)
+        if (process.env.FIREBASE_DATABASE_EMULATOR_HOST) {
+          const [, portStr] = process.env.FIREBASE_DATABASE_EMULATOR_HOST.split(':')
+          fbConfig.databaseURL = `http://localhost:${portStr || '9000'}?ns=${fbConfig.projectId || 'local'}`
+        }
+
+        fbInstance = admin.initializeApp(fbConfig)
+        if (process.env.FIRESTORE_EMULATOR_HOST) {
+          const firestoreSettings = firestoreSettingsFromEnv()
+          admin.firestore().settings(firestoreSettings)
+        }
       } else {
         // Get service account from local file falling back to environment variables
         const serviceAccount = getServiceAccount();
@@ -350,8 +359,11 @@ export function initializeFirebase(): admin.app.App {
 export function slashPathToFirestoreRef(
   firestoreInstance: any,
   slashPath: string,
-  options?: any,
+  options?: any
 ): admin.firestore.CollectionReference | admin.firestore.DocumentReference | admin.firestore.Query {
+  if (!slashPath) {
+    throw new Error('Path is required to make Firestore Reference')
+  }
   const isDocPath = slashPath.split('/').length % 2;
   
  const ref = isDocPath
