@@ -34,27 +34,27 @@
     "cli"
   ],
   "dependencies": {
-    "firebase-admin": "^8.8.0",
+    "firebase-admin": "^8.9.2",
     "lodash": "^4.17.15",
     "yargs": "^14.2.0"
   },
   "devDependencies": {
-    "@types/lodash": "^4.14.144",
-    "@types/node": "^12.11.1",
-    "@types/yargs": "^13.0.2",
-    "@typescript-eslint/eslint-plugin": "^2.4.0",
+    "@types/lodash": "^4.14.149",
+    "@types/node": "^13.7.0",
+    "@types/yargs": "^15.0.3",
+    "@typescript-eslint/eslint-plugin": "^2.19.0",
     "@typescript-eslint/parser": "^2.4.0",
-    "eslint": "^6.6.0",
+    "eslint": "^6.8.0",
     "eslint-config-airbnb-base": "^14.0.0",
-    "eslint-config-prettier": "^6.5.0",
-    "eslint-plugin-import": "^2.18.2",
-    "eslint-plugin-jsdoc": "^17.0.1",
+    "eslint-config-prettier": "^6.10.0",
+    "eslint-plugin-import": "^2.20.0",
+    "eslint-plugin-jsdoc": "^21.0.0",
     "eslint-plugin-jsx-a11y": "^6.2.3",
     "eslint-plugin-prettier": "^3.1.0",
-    "husky": "^3.1.0",
+    "husky": "^4.2.1",
     "prettier": "^1.19.1",
     "rimraf": "^3.0.0",
-    "typescript": "^3.7.3"
+    "typescript": "^3.7.5"
   },
   "license": "MIT",
   "repository": {
