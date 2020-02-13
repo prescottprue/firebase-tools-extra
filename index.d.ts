@@ -47,9 +47,13 @@ declare module "commands/rtdb" {
     export type RTDBAction = 'get' | 'set' | 'push' | 'update' | 'remove';
     export default function rtdbAction(action: "push" | "update" | "get" | "set" | "remove" | undefined, actionPath: string, thirdArg?: any): Promise<any>;
 }
+declare module "commands/createCustomToken" {
+    export default function createCustomToken(uid: string, envName?: string): Promise<string>;
+}
 declare module "index" {
     import firestoreAction from "commands/firestore";
     import rtdbAction from "commands/rtdb";
-    export { rtdbAction };
+    import createCustomToken from "commands/createCustomToken";
+    export { rtdbAction, createCustomToken };
     export default firestoreAction;
 }

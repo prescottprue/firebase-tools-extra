@@ -85,6 +85,24 @@ const commands = [
   }
 ];
 
+/**
+ * @param argv - argv from yargs
+ * @returns {Promise} Resolves with action results
+ */
+function runAction(argv) {
+  const args = argv._ || []
+  const cleanArgs = args.filter((val) => val && (val !== 'npx'))
+  if (cleanArgs[0] === 'createCustomToken') {
+    return createCustomToken(...cleanArgs.slice(1));
+  }
+  if (cleanArgs[0] === 'firestore') {
+    return firestoreAction(...cleanArgs.slice(1));
+  }
+  const rtdbArgs = argv.d ? [cleanArgs[1], argv.d] : cleanArgs.splice(1);
+  const action = cleanArgs[0].split(':')[1]
+  return rtdbAction(action, ...rtdbArgs)
+}
+
 (function runFirebaseExtra() {
   let currentArgs;
   try {
@@ -103,17 +121,13 @@ const commands = [
       alias: 'v',
       default: false
     });
-    const args = argv._ || []
-    const cleanArgs = args.filter((val) => val && (val !== 'npx'))
-    if (cleanArgs[0] === 'createCustomToken') {
-      return createCustomToken(...cleanArgs.slice(1));
-    }
-    if (cleanArgs[0] === 'firestore') {
-      return firestoreAction(...cleanArgs.slice(1));
-    }
-    const rtdbArgs = argv.d ? [cleanArgs[1], argv.d] : cleanArgs.splice(1);
-    const action = cleanArgs[0].split(':')[1]
-    return rtdbAction(action, ...rtdbArgs);
+    return runAction(argv)
+      .then(() => {
+        process.exit(0)
+      })
+      .catch(() => {
+        process.exit(1)
+      })
     /* eslint-enable no-unused-expressions */
   } catch (err) {
     /* eslint-disable no-console */
