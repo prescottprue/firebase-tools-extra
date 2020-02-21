@@ -262,7 +262,7 @@ export default async function firestoreAction(
       })
 
     // Write results to stdout to be loaded in tests
-    if (action === "get") {
+    if (action === "get" && dataToWrite) {
       process.stdout.write(JSON.stringify(dataToWrite));
     }
 

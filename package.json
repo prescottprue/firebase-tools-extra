@@ -1,6 +1,6 @@
 {
   "name": "firebase-tools-extra",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "description": "Extra methods for firebase-tools which support using a service account.",
   "main": "lib/index.js",
   "module": "lib/index.js",
