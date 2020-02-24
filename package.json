@@ -1,6 +1,6 @@
 {
   "name": "firebase-tools-extra",
-  "version": "0.6.0",
+  "version": "1.0.0-alpha",
   "description": "Extra methods for firebase-tools which support using a service account.",
   "main": "lib/index.js",
   "module": "lib/index.js",
@@ -34,14 +34,13 @@
     "cli"
   ],
   "dependencies": {
+    "commander": "^4.1.1",
     "firebase-admin": "^8.9.2",
-    "lodash": "^4.17.15",
-    "yargs": "^14.2.0"
+    "lodash": "^4.17.15"
   },
   "devDependencies": {
     "@types/lodash": "^4.14.149",
     "@types/node": "^13.7.0",
-    "@types/yargs": "^15.0.3",
     "@typescript-eslint/eslint-plugin": "^2.20.0",
     "@typescript-eslint/parser": "^2.20.0",
     "eslint": "^6.8.0",

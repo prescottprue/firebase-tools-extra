@@ -42,10 +42,25 @@ declare module "commands/firestore" {
     }
     export function buildFirestoreCommand(action: string, actionPath: string, data?: any, opts?: FirestoreCommandOptions): string;
     export type FirestoreAction = 'get' | 'set' | 'add' | 'update' | 'delete';
+    export function firestoreGet(actionPath: string, options?: any): Promise<any>;
     export default function firestoreAction(action: "add" | "update" | "get" | "set" | "delete" | undefined, actionPath: string, thirdArg?: any, withMeta?: boolean): Promise<any>;
 }
 declare module "commands/rtdb" {
     export type RTDBAction = 'get' | 'set' | 'push' | 'update' | 'remove';
+    export type RTDBWriteAction = 'set' | 'push' | 'update';
+    export interface RTDBGetOptions {
+        shallow?: boolean;
+        orderBy?: string;
+        orderByKey?: string;
+        orderByValue?: string;
+        equalTo?: any;
+        startAt?: any;
+        endAt?: any;
+        limitToFirst?: number;
+        limitToLast?: number;
+    }
+    export function rtdbGet(actionPath: string, options?: RTDBGetOptions): Promise<any>;
+    export function rtdbWrite(action: "push" | "update" | "set" | undefined, actionPath: string, thirdArg?: any): Promise<any>;
     export default function rtdbAction(action: "push" | "update" | "get" | "set" | "remove" | undefined, actionPath: string, thirdArg?: any): Promise<any>;
 }
 declare module "commands/createCustomToken" {
