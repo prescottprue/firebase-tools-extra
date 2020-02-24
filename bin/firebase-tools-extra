@@ -125,7 +125,10 @@ function runAction(argv) {
       .then(() => {
         process.exit(0)
       })
-      .catch(() => {
+      .catch((err) => {
+        /* eslint-disable no-console */
+        console.error(`Error running firebase action: ${err.message || 'Error'}`);
+        /* eslint-enable no-console */
         process.exit(1)
       })
     /* eslint-enable no-unused-expressions */

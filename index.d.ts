@@ -27,6 +27,7 @@ declare module "utils" {
     export function getServiceAccount(envSlug?: string): ServiceAccount;
     export function initializeFirebase(): admin.app.App;
     export function slashPathToFirestoreRef(firestoreInstance: any, slashPath: string, options?: any): admin.firestore.CollectionReference | admin.firestore.DocumentReference | admin.firestore.Query;
+    export function deleteFirestoreCollection(firestoreInstance: any, collectionPath: string, batchSize?: number): Promise<any>;
     export function getArgsString(args: string[]): string;
 }
 declare module "commands/firestore" {

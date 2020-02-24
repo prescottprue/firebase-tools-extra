@@ -378,6 +378,61 @@ export function slashPathToFirestoreRef(
   return ref;
 }
 
+
+/**
+ * @param firestoreInstance - Instance of firestore from which to delete collection
+ * @param query - Parent collection query
+ * @param resolve - Function to call to resolve
+ * @param reject - Function to call to reject
+ */
+function deleteQueryBatch(firestoreInstance: any, query: any, resolve: Function, reject: Function): any {
+  query.get()
+    .then((snapshot: any) => {
+      // When there are no documents left, we are done
+      if (snapshot.size === 0) {
+        return 0;
+      }
+
+      // Delete documents in a batch
+      const batch = firestoreInstance.batch();
+      snapshot.docs.forEach((doc: any) => {
+        batch.delete(doc.ref);
+      });
+
+      return batch.commit().then(() => {
+        return snapshot.size;
+      });
+    }).then((numDeleted: any) => {
+      if (numDeleted === 0) {
+        resolve();
+        return;
+      }
+
+      // Recurse on the next process tick, to avoid
+      // exploding the stack.
+      process.nextTick(() => {
+        deleteQueryBatch(firestoreInstance, query, resolve, reject);
+      });
+    })
+    .catch(reject);
+}
+
+/**
+ * @param firestoreInstance - Instance of firestore from which to delete collection
+ * @param collectionPath - Path of collection to delete
+ * @param batchSize - Size of batch
+ * @returns Promise which resolves when collection has been deleted
+ */
+export function deleteFirestoreCollection(firestoreInstance: any, collectionPath: string, batchSize?: number): Promise<any> {
+  const collectionRef = firestoreInstance.collection(collectionPath);
+  const query = collectionRef.orderBy('__name__').limit(batchSize || 200);
+
+  return new Promise((resolve, reject) => {
+    deleteQueryBatch(firestoreInstance, query, resolve, reject);
+  });
+}
+
+
 /**
  * Create command arguments string from an array of arguments by joining them
  * with a space including a leading space. If no args provided, empty string

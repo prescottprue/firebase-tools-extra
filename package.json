@@ -1,6 +1,6 @@
 {
   "name": "firebase-tools-extra",
-  "version": "0.5.2",
+  "version": "0.6.0",
   "description": "Extra methods for firebase-tools which support using a service account.",
   "main": "lib/index.js",
   "module": "lib/index.js",
@@ -42,8 +42,8 @@
     "@types/lodash": "^4.14.149",
     "@types/node": "^13.7.0",
     "@types/yargs": "^15.0.3",
-    "@typescript-eslint/eslint-plugin": "^2.19.0",
-    "@typescript-eslint/parser": "^2.4.0",
+    "@typescript-eslint/eslint-plugin": "^2.20.0",
+    "@typescript-eslint/parser": "^2.20.0",
     "eslint": "^6.8.0",
     "eslint-config-airbnb-base": "^14.0.0",
     "eslint-config-prettier": "^6.10.0",
@@ -54,7 +54,7 @@
     "husky": "^4.2.1",
     "prettier": "^1.19.1",
     "rimraf": "^3.0.0",
-    "typescript": "^3.7.5"
+    "typescript": "^3.8.2"
   },
   "license": "MIT",
   "repository": {

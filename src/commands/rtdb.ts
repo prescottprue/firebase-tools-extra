@@ -41,14 +41,29 @@ export default async function rtdbAction(
   const cleanActionName = (actionNameMap as any)[action] || action
 
   try {
-    // Call action with fixture data
-    const ref: admin.database.Reference = fbInstance.database().ref(actionPath)
+    let ref: admin.database.Reference | admin.database.Query = fbInstance.database().ref(actionPath)
+    if (thirdArg) {
+      if(thirdArg.orderByChild) {
+        ref = ref.orderByChild(thirdArg.orderByChild)
+      }
+      if(thirdArg.equalTo) {
+        ref = ref.equalTo(thirdArg.equalTo)
+      }
+      if (thirdArg.limitToLast) {
+        ref = ref.limitToLast(thirdArg.limitToLast)
+      }
+    }
     const res = await (ref as any)[cleanActionName](action === 'get' ? 'value' : options)
     
     // Write results to stdout to be loaded in tests
     if (action === "get") {
-      const dataToWrite = res.val()
-      process.stdout.write(JSON.stringify(dataToWrite));
+      let dataToWrite = res.val()
+      if (thirdArg) {
+        if (thirdArg.shallow) {
+          dataToWrite = Object.keys(dataToWrite)
+        }
+      }
+      process.stdout.write(dataToWrite && JSON.stringify(dataToWrite));
     }
   } catch (err) {
     console.error(`Error with ${action} at path "${actionPath}": `, err.message); // eslint-disable-line no-console
