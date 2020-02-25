@@ -43,10 +43,10 @@ declare module "commands/firestore" {
     export function buildFirestoreCommand(action: string, actionPath: string, data?: any, opts?: FirestoreCommandOptions): string;
     export type FirestoreAction = 'get' | 'set' | 'add' | 'update' | 'delete';
     export function firestoreGet(actionPath: string, options?: any): Promise<any>;
-    export default function firestoreAction(action: "add" | "update" | "get" | "set" | "delete" | undefined, actionPath: string, thirdArg?: any, withMeta?: boolean): Promise<any>;
+    export function firestoreWrite(action: "add" | "update" | "get" | "set" | "delete" | undefined, actionPath: string, thirdArg?: any, options?: any): Promise<any>;
+    export function firestoreDelete(actionPath: string, options?: any): Promise<any>;
 }
 declare module "commands/rtdb" {
-    export type RTDBAction = 'get' | 'set' | 'push' | 'update' | 'remove';
     export type RTDBWriteAction = 'set' | 'push' | 'update';
     export interface RTDBGetOptions {
         shallow?: boolean;
@@ -61,15 +61,14 @@ declare module "commands/rtdb" {
     }
     export function rtdbGet(actionPath: string, options?: RTDBGetOptions): Promise<any>;
     export function rtdbWrite(action: "push" | "update" | "set" | undefined, actionPath: string, thirdArg?: any): Promise<any>;
-    export default function rtdbAction(action: "push" | "update" | "get" | "set" | "remove" | undefined, actionPath: string, thirdArg?: any): Promise<any>;
+    export function rtdbRemove(actionPath: string): Promise<void>;
 }
 declare module "commands/createCustomToken" {
     export default function createCustomToken(uid: string, envName?: string): Promise<string>;
 }
 declare module "index" {
-    import firestoreAction from "commands/firestore";
-    import rtdbAction from "commands/rtdb";
+    import { firestoreGet, firestoreWrite, firestoreDelete } from "commands/firestore";
+    import { rtdbGet, rtdbWrite, rtdbRemove } from "commands/rtdb";
     import createCustomToken from "commands/createCustomToken";
-    export { rtdbAction, createCustomToken };
-    export default firestoreAction;
+    export { firestoreGet, firestoreWrite, firestoreDelete, rtdbGet, rtdbWrite, rtdbRemove, createCustomToken };
 }

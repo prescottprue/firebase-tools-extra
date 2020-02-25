@@ -1,0 +1,50 @@
+{
+  "scope": true,
+  "lowercaseTypes": true,
+  "endWithDot": false,
+  "initialCommit": {
+    "isEnabled": false
+  },
+  "types": [
+    {
+      "type": "build:",
+      "description": "Changes that affect the build system or external dependencies"
+    },
+    {
+      "type": "ci:",
+      "description": "Changes to our CI configuration files and scripts"
+    },
+    {
+      "type": "chore:",
+      "description": "Housekeeping changes not affecting production code"
+    },
+    {
+      "type": "docs:",
+      "description": "Documentation only changes"
+    },
+    {
+      "type": "feat:",
+      "description": "A new feature"
+    },
+    {
+      "type": "fix:",
+      "description": "A bug fix"
+    },
+    {
+      "type": "perf:",
+      "description": "A code change that improves performance"
+    },
+    {
+      "type": "refactor:",
+      "description": "A code change that neither fixes a bug nor adds a feature"
+    },
+    {
+      "type": "style:",
+      "description": "Changes that do not affect the meaning of the code (formatting)"
+    },
+    {
+      "type": "test:",
+      "description": "Adding missing tests or correcting existing tests"
+    }
+  ]
+}

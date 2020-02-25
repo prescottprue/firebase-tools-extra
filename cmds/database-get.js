@@ -4,7 +4,7 @@ const { rtdbGet } = require('../lib/commands/rtdb');
 /**
  * @name databaseGet
  * fetch and print JSON data at the specified path from database emulator
- * @param {string} program - Commander program
+ * @param {object} program - Commander program
  */
 module.exports = function databaseGetCommand(program) {
   program

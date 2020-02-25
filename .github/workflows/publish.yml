@@ -34,22 +34,27 @@ jobs:
           key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
 
       - name: Install Dependencies
-        env:
-          CI: true
         run: |
           yarn install --frozen-lockfile
 
       - name: Check Lint
         run: yarn lint
 
-      - name: Publish
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: npm publish $(if [ ${{github.ref}} == 'refs/heads/next' ]; then echo '--tag next';fi;)
-
-      - name: Archive Build Artifact
-        uses: actions/upload-artifact@master
-        if: success()
+      - name: Semantic Release
+        id: semantic
+        uses: cycjimmy/semantic-release-action@v2
         with:
-          name: build
-          path: lib
+          semantic_version: ^16.0.3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Archive Workspace on Failure
+        if: failure()
+        run: zip -r workspace-files ./
+      - uses: actions/upload-artifact@master
+        if: failure()
+        with:
+          name: workspace
+          path: workspace-files.zip

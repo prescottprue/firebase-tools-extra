@@ -4,7 +4,7 @@ const { rtdbWrite } = require('../lib/commands/rtdb');
 /**
  * @name databasePush
  * Create test environment config then open Cypress Test Runner
- * @param {string} program - Commander program
+ * @param {object} program - Commander program
  */
 module.exports = function databasePushCommand(program) {
   program
