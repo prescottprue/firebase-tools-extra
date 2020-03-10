@@ -1,6 +1,6 @@
 {
   "name": "firebase-tools-extra",
-  "version": "0.5.2",
+  "version": "0.5.3",
   "description": "Extra methods for firebase-tools which support using a service account.",
   "main": "lib/index.js",
   "module": "lib/index.js",
@@ -40,21 +40,22 @@
   },
   "devDependencies": {
     "@types/lodash": "^4.14.149",
-    "@types/node": "^13.7.0",
+    "@types/node": "^13.9.0",
     "@types/yargs": "^15.0.3",
-    "@typescript-eslint/eslint-plugin": "^2.19.0",
-    "@typescript-eslint/parser": "^2.4.0",
+    "@typescript-eslint/eslint-plugin": "^2.23.0",
+    "@typescript-eslint/parser": "^2.23.0",
     "eslint": "^6.8.0",
     "eslint-config-airbnb-base": "^14.0.0",
     "eslint-config-prettier": "^6.10.0",
     "eslint-plugin-import": "^2.20.0",
-    "eslint-plugin-jsdoc": "^21.0.0",
+    "eslint-plugin-jsdoc": "^22.0.0",
     "eslint-plugin-jsx-a11y": "^6.2.3",
-    "eslint-plugin-prettier": "^3.1.0",
-    "husky": "^4.2.1",
+    "eslint-plugin-prettier": "^3.1.2",
+    "husky": "^4.2.3",
+    "lint-staged": "^10.0.8",
     "prettier": "^1.19.1",
     "rimraf": "^3.0.0",
-    "typescript": "^3.7.5"
+    "typescript": "^3.8.3"
   },
   "license": "MIT",
   "repository": {
@@ -70,7 +71,15 @@
   },
   "husky": {
     "hooks": {
-      "pre-push": "npm run lint"
+      "pre-commit": "lint-staged"
     }
+  },
+  "lint-staged": {
+    "*.{json,md}": [
+      "prettier --write"
+    ],
+    "*.{ts}": [
+      "eslint --fix"
+    ]
   }
 }
