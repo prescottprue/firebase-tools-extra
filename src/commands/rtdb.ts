@@ -3,6 +3,7 @@ import { isObject, isDate } from "lodash";
 import { parseFixturePath, initializeFirebase } from "../utils";
 
 export type RTDBAction = 'get' | 'set' | 'push' | 'update' | 'remove'
+export type RTDBMethod = 'once' | 'set' | 'push' | 'update' | 'remove'
 
 /**
  * Run action for Firestore
@@ -17,6 +18,12 @@ export default async function rtdbAction(
   actionPath: string,
   thirdArg?: any
 ): Promise<any> {
+  const validActionNames: RTDBAction[] = ['get', 'set', 'push', 'update', 'remove']
+  // Throw for invalid action name
+  if (!validActionNames.includes(action)) {
+    throw new Error(`"${action}" is not a valid RTDB action. Use one of the following: ${validActionNames.join(', ')}`)
+  }
+
   const fbInstance = initializeFirebase();
   const parsedVal = parseFixturePath(thirdArg);
   const options = parsedVal;
@@ -38,7 +45,7 @@ export default async function rtdbAction(
     get: 'once'
   }
 
-  const cleanActionName = (actionNameMap as any)[action] || action
+  const cleanActionName: RTDBMethod = (actionNameMap as any)[action] || action
 
   try {
     let ref: admin.database.Reference | admin.database.Query = fbInstance.database().ref(actionPath)
@@ -66,7 +73,7 @@ export default async function rtdbAction(
       process.stdout.write(dataToWrite && JSON.stringify(dataToWrite));
     }
   } catch (err) {
-    console.error(`Error with ${action} at path "${actionPath}": `, err.message); // eslint-disable-line no-console
+    console.error(`Error with RTDB ${action} at path "${actionPath}": `, err.message); // eslint-disable-line no-console
     throw err;
   }
 }

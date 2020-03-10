@@ -40,12 +40,13 @@ declare module "commands/firestore" {
         token?: string;
         recursive?: boolean;
     }
-    export function buildFirestoreCommand(action: string, actionPath: string, data?: any, opts?: FirestoreCommandOptions): string;
+    export function buildFirestoreCommand(action: FirestoreAction, actionPath: string, data?: any, opts?: FirestoreCommandOptions): string;
     export type FirestoreAction = 'get' | 'set' | 'add' | 'update' | 'delete';
     export default function firestoreAction(action: "add" | "update" | "get" | "set" | "delete" | undefined, actionPath: string, thirdArg?: any, withMeta?: boolean): Promise<any>;
 }
 declare module "commands/rtdb" {
     export type RTDBAction = 'get' | 'set' | 'push' | 'update' | 'remove';
+    export type RTDBMethod = 'once' | 'set' | 'push' | 'update' | 'remove';
     export default function rtdbAction(action: "push" | "update" | "get" | "set" | "remove" | undefined, actionPath: string, thirdArg?: any): Promise<any>;
 }
 declare module "commands/createCustomToken" {

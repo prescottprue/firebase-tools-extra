@@ -141,7 +141,7 @@ export interface FirestoreCommandOptions {
  * @returns Command string to be used with cy.exec
  */
 export function buildFirestoreCommand(
-  action: string,
+  action: FirestoreAction,
   actionPath: string,
   data?: any,
   opts?: FirestoreCommandOptions
@@ -212,8 +212,7 @@ export default async function firestoreAction(
     options
   );
 
-  // TODO: refactor to make the initialisation for options and its structure more explicit
-
+  // TODO: refactor to make the init for options and its structure more explicit
   // TODO: the fact that thirdArg can be of string type with value undefined suggests type coercion in the caller
   // Check to see if parsedVal is fixture path
   if (thirdArg && thirdArg !== "undefined" && isString(parsedVal)) {
