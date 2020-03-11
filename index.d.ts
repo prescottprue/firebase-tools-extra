@@ -7,6 +7,7 @@ declare module "constants" {
 }
 declare module "utils" {
     import * as admin from "firebase-admin";
+
     export const DEFAULT_BASE_PATH: string;
     export function isString(valToCheck: any): boolean;
     export function readJsonFile(filePath: string): any;
@@ -40,7 +41,7 @@ declare module "commands/firestore" {
         token?: string;
         recursive?: boolean;
     }
-    export function buildFirestoreCommand(action: string, actionPath: string, data?: any, opts?: FirestoreCommandOptions): string;
+    export function buildFirestoreCommand(action: FirestoreAction, actionPath: string, data?: any, opts?: FirestoreCommandOptions): string;
     export type FirestoreAction = 'get' | 'set' | 'add' | 'update' | 'delete';
     export function firestoreGet(actionPath: string, options?: any): Promise<any>;
     export function firestoreWrite(action: "add" | "update" | "get" | "set" | "delete" | undefined, actionPath: string, thirdArg?: any, options?: any): Promise<any>;
@@ -70,5 +71,6 @@ declare module "index" {
     import { firestoreGet, firestoreWrite, firestoreDelete } from "commands/firestore";
     import { rtdbGet, rtdbWrite, rtdbRemove } from "commands/rtdb";
     import createCustomToken from "commands/createCustomToken";
+
     export { firestoreGet, firestoreWrite, firestoreDelete, rtdbGet, rtdbWrite, rtdbRemove, createCustomToken };
 }
