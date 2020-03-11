@@ -1,6 +1,6 @@
 {
   "name": "firebase-tools-extra",
-  "version": "0.0.0-development",
+  "version": "1.0.0-alpha.2",
   "description": "Extra functionality for firebase-tools with support for emulators and auth through service account.",
   "main": "lib/index.js",
   "module": "lib/index.js",

@@ -40,15 +40,22 @@ jobs:
       - name: Check Lint
         run: yarn lint
 
-      - name: Semantic Release
-        id: semantic
-        uses: cycjimmy/semantic-release-action@v2
-        with:
-          semantic_version: ^17.0.4
+
+      - name: Publish
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          GITHUB_REF: ${{ github.ref }}
+        run: npm publish $([ "$GITHUB_REF" == 'refs/heads/next' ] && echo '--tag next')
+
+      # - name: Semantic Release
+      #   id: semantic
+      #   uses: cycjimmy/semantic-release-action@v2
+      #   with:
+      #     semantic_version: ^17.0.4
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #     NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      #     NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Archive Workspace on Failure
         if: failure()
