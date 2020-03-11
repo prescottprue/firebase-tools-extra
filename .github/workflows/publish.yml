@@ -44,7 +44,7 @@ jobs:
         id: semantic
         uses: cycjimmy/semantic-release-action@v2
         with:
-          semantic_version: ^16.0.3
+          semantic_version: ^17.0.4
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

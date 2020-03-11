@@ -2,6 +2,10 @@
   "scope": true,
   "lowercaseTypes": true,
   "endWithDot": false,
+   "branches": [
+    {"name": "master"},
+    {"name": "next", "channel": "next"},
+  ],
   "initialCommit": {
     "isEnabled": false
   },
