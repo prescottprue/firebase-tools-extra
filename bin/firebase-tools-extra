@@ -36,17 +36,41 @@ const commands = [
   },
   {
     command: 'database:get [actionPath]',
-    describe: 'run action on Firebase using service account',
+    describe: 'fetch and print JSON data at the specified path',
     builder: (yargsInstance) => {
       yargsInstance.positional('actionPath', {
         describe: 'path of action to run on Firestore',
         default: 'projects/test-project'
       });
+      yargsInstance.option('order-by-child', {
+        describe: 'order by a primative value'
+      });
+      yargsInstance.option('equal-to', {
+        describe: 'restrict results to <val> (based on specified ordering)'
+      });
+      yargsInstance.option('limit-to-last', {
+        describe: 'limit to the last <num> results'
+      });
+      yargsInstance.option('limit-to-first', {
+        describe: 'limit to the first <num> results'
+      });
+      yargsInstance.option('order-by-key', {
+        describe: 'order by key name'
+      });
+      yargsInstance.option('order-by-value', {
+        describe: 'order by primitive value'
+      });
+      yargsInstance.option('start-at', {
+        describe: 'start results at <val> (based on specified ordering)'
+      });
+      yargsInstance.option('end-at', {
+        describe: 'end results at <val> (based on specified ordering)'
+      });
     }
   },
   {
     command: 'database:set [actionPath]',
-    describe: 'run action on Firebase using service account',
+    describe: 'store JSON data at the specified path via STDIN, arg, or file',
     builder: (yargsInstance) => {
       yargsInstance.positional('actionPath', {
         describe: 'path of action to run on Firestore',
@@ -56,7 +80,7 @@ const commands = [
   },
   {
     command: 'database:update [actionPath]',
-    describe: 'run action on Firebase using service account',
+    describe: 'update some of the keys for the defined path in your Firebase',
     builder: (yargsInstance) => {
       yargsInstance.positional('actionPath', {
         describe: 'path of action to run on Firestore',
@@ -66,7 +90,17 @@ const commands = [
   },
   {
     command: 'database:delete [actionPath]',
-    describe: 'run action on Firebase using service account',
+    describe: 'remove data from your Firebase at the specified path',
+    builder: (yargsInstance) => {
+      yargsInstance.positional('actionPath', {
+        describe: 'path of action to run on Firestore',
+        default: 'projects/test-project'
+      });
+    }
+  },
+  {
+    command: 'database:remove [actionPath]',
+    describe: 'remove data from your Firebase at the specified path',
     builder: (yargsInstance) => {
       yargsInstance.positional('actionPath', {
         describe: 'path of action to run on Firestore',
@@ -76,7 +110,7 @@ const commands = [
   },
   {
     command: 'createCustomToken [uid]',
-    describe: 'Generate a custom token using a service account',
+    describe: 'create a custom auth token using a service account',
     builder: (yargsInstance) => {
       yargsInstance.positional('uid', {
         describe: 'UID of user for which to generate custom token'
@@ -100,6 +134,9 @@ function runAction(argv) {
   }
   const rtdbArgs = argv.d ? [cleanArgs[1], argv.d] : cleanArgs.splice(1);
   const action = cleanArgs[0].split(':')[1]
+  if (action === 'get') {
+    return rtdbAction(action, rtdbArgs[0], argv)
+  }
   return rtdbAction(action, ...rtdbArgs)
 }
 
@@ -125,7 +162,10 @@ function runAction(argv) {
       .then(() => {
         process.exit(0)
       })
-      .catch(() => {
+      .catch((err) => {
+        /* eslint-disable no-console */
+        console.error(`Error running firebase action: ${err.message || 'Error'}`);
+        /* eslint-enable no-console */
         process.exit(1)
       })
     /* eslint-enable no-unused-expressions */

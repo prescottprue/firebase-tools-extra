@@ -1,7 +1,7 @@
 {
   "name": "firebase-tools-extra",
-  "version": "0.5.3",
-  "description": "Extra methods for firebase-tools which support using a service account.",
+  "version": "0.6.0",
+  "description": "Extra functionality for firebase-tools with support for emulators and auth through service account.",
   "main": "lib/index.js",
   "module": "lib/index.js",
   "jsnext:main": "lib/index.js",

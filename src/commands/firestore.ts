@@ -8,7 +8,8 @@ import {
   initializeFirebase,
   envVarBasedOnCIEnv,
   getArgsString,
-  isString
+  isString,
+  deleteFirestoreCollection
 } from "../utils";
 import {
   FIREBASE_TOOLS_BASE_COMMAND,
@@ -243,7 +244,13 @@ export default async function firestoreAction(
   }
 
   // Confirm ref has action as a method
-  if (typeof (ref as any)[action] !== "function") {
+  if (!(ref as any)[action]) {
+    // Delete Firestore Collection or SubCollection
+    if (action === 'delete' && (actionPath.split('/').length % 2)) {
+      return deleteFirestoreCollection(fbInstance.firestore(), actionPath, 200)
+    }
+
+    // Otherwise throw error for ref not containg action
     const missingActionErr = `Ref at provided path "${actionPath}" does not have action "${action}"`;
     throw new Error(missingActionErr);
   }
@@ -251,7 +258,11 @@ export default async function firestoreAction(
   try {
     // Call action with fixture data
     const res = await (ref as any)[action](options)
-    const dataToWrite = typeof res.data === 'function'
+
+    // Parse results for get action
+    if (action === "get") {
+      // Include id in doc if collection query
+      const dataToWrite = typeof res.data === 'function'
       ? res.data()
       : res.docs && res.docs.map((docSnap: admin.firestore.DocumentSnapshot) => {
         return {
@@ -259,13 +270,13 @@ export default async function firestoreAction(
           id: docSnap.id
         }
       })
-
       // Write results to stdout
-    if (action === "get" && dataToWrite) {
-      process.stdout.write(JSON.stringify(dataToWrite));
+      if (dataToWrite) {
+        process.stdout.write(JSON.stringify(dataToWrite));
+      }
+      return dataToWrite;
     }
-
-    return dataToWrite;
+    return undefined
   } catch (err) {
     console.error(`Error with ${action} at path "${actionPath}": `, err.message); // eslint-disable-line no-console
     throw err;
