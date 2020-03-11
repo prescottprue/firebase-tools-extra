@@ -17,6 +17,7 @@ export interface RTDBGetOptions {
 }
 
 /**
+ * Write data to path of Real Time Database
  * @param actionPath - Pat of get
  * @param options - Get options object
  */
@@ -53,6 +54,7 @@ export async function rtdbGet(actionPath: string, options?: RTDBGetOptions): Pro
 }
 
 /**
+ * Write data to path of Real Time Database
  * @param action - Write action to run
  * @param actionPath - Path of action
  * @param thirdArg - Options
@@ -85,6 +87,7 @@ export async function rtdbWrite(action: RTDBWriteAction = "set", actionPath: str
 }
 
 /**
+ * Remove data from path of Real Time Database
  * @param actionPath - Path to remove from database
  */
 export async function rtdbRemove(actionPath: string): Promise<void> {

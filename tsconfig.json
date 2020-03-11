@@ -6,7 +6,6 @@
     "moduleResolution": "node",
     "declaration": true,
     "outDir": "lib",
-    "removeComments": true,
     "rootDir": "./src",
     "importHelpers": true,
     "downlevelIteration": true,
