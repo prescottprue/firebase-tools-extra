@@ -45,7 +45,7 @@ export function readJsonFile(filePath: string): any {
  * @param unparsed - Unparsed string to be parsed into JSON
  * @returns Parsed fixture value or path
  */
-export function parseFixturePath(unparsed: string): any {
+export function tryToJsonParse(unparsed: any): any {
   if (isString(unparsed)) {
     try {
       return JSON.parse(unparsed);

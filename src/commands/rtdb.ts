@@ -1,10 +1,9 @@
 import * as admin from 'firebase-admin'
-import { isObject, isDate } from "lodash";
-import { parseFixturePath, initializeFirebase } from "../utils";
+import { initializeFirebase, readJsonFile, tryToJsonParse } from "../utils";
 
 export type RTDBWriteAction = 'set' | 'push' | 'update'
 
-export interface RTDBGetOptions {
+export interface RTDBGetMethods {
   shallow?: boolean
   orderBy?: string
   orderByKey?: string
@@ -16,6 +15,35 @@ export interface RTDBGetOptions {
   limitToLast?: number
 }
 
+export interface RTDBGetOptions extends RTDBGetMethods {
+  shallow?: boolean
+  pretty?: boolean
+}
+
+/**
+ * @param baseRef - Base RTDB reference
+ * @param options - Options for ref
+ * @returns RTDB Reference
+ */
+function optionsToRtdbRef(baseRef: admin.database.Reference, options?: RTDBGetMethods): admin.database.Reference | admin.database.Query {
+  const optionsToAdd = [
+    'orderByChild',
+    'orderByKey',
+    'orderByValue',
+    'equalTo',
+    'limitToFirst',
+    'limitToLast',
+    'startAt',
+    'endAt'
+  ];
+  return optionsToAdd.reduce((acc: admin.database.Reference | admin.database.Query, optionName: string) => {
+    if (options && (options as any)[optionName]) {
+      return (acc as any)[optionName]((options as any)[optionName]);
+    }
+    return acc
+  }, baseRef);
+}
+
 /**
  * Write data to path of Real Time Database
  * @param actionPath - Pat of get
@@ -25,28 +53,16 @@ export async function rtdbGet(actionPath: string, options?: RTDBGetOptions): Pro
   const fbInstance = initializeFirebase();
 
   try {
-    let ref: admin.database.Reference | admin.database.Query = fbInstance.database().ref(actionPath)
-    if (options) {
-      if(options.orderBy) {
-        ref = ref.orderByChild(options.orderBy)
-      }
-      if(options.equalTo) {
-        ref = ref.equalTo(options.equalTo)
-      }
-      if (options.limitToLast) {
-        ref = ref.limitToLast(options.limitToLast)
-      }
-    }
-    const res = await (ref as any).once('value')
+    const baseRef: admin.database.Reference = fbInstance.database().ref(actionPath)
+    const ref = optionsToRtdbRef(baseRef, options)
+    const res = await ref.once('value')
     
     // Write results to stdout to be loaded in tests
-    let dataToWrite = res.val()
-    if (options) {
-      if (options.shallow) {
-        dataToWrite = Object.keys(dataToWrite)
-      }
+    // TODO: Support acutal shallow queries (may require Legacy token to use REST API)
+    const dataToWrite = options?.shallow ? Object.keys(res.val()) : res.val()
+    if (dataToWrite) {
+      process.stdout.write(options?.pretty ? JSON.stringify(dataToWrite, null, 2) : JSON.stringify(dataToWrite));
     }
-    process.stdout.write(dataToWrite && JSON.stringify(dataToWrite));
   } catch (err) {
     console.error(`Error with database:get at path "${actionPath}": `, err.message); // eslint-disable-line no-console
     throw err;
@@ -55,31 +71,27 @@ export async function rtdbGet(actionPath: string, options?: RTDBGetOptions): Pro
 
 /**
  * Write data to path of Real Time Database
+ *
  * @param action - Write action to run
  * @param actionPath - Path of action
+ * @param filePath
+ * @param options
  * @param thirdArg - Options
  */
-export async function rtdbWrite(action: RTDBWriteAction = "set", actionPath: string, thirdArg?: any): Promise<any> {
+export async function rtdbWrite(action: RTDBWriteAction = "set", actionPath: string, filePath?: string, options?: any): Promise<any> {
   const fbInstance = initializeFirebase();
-  const parsedVal = parseFixturePath(thirdArg);
-  const options = parsedVal;
-
-  // TODO: Support parsing other values to timestamps
-  // Attempt to convert createdAt to a timestamp
-  if (isObject(parsedVal) && options.createdAt) {
-    try {
-      const dateVal = new Date(options.createdAt);
-      if (isDate(dateVal)) {
-        options.createdAt = dateVal;
-      }
-    } catch (err) {
-      console.log('Error parsing date value for createdAt') // eslint-disable-line
-    }
+  if (!filePath && !options?.data) {
+    const errMsg = `File path or data is required to run ${action} at path "${actionPath}"`
+    console.error(errMsg) // eslint-disable-line no-console
+    throw new Error(errMsg)
   }
+  const dataToWrite = options?.data ? tryToJsonParse(options.data) : readJsonFile(filePath as string)
+
+  // TODO: Support parsing values to server timestamps (check if {.sv: "timestamp"} is auto converted)
 
   try {
     const ref: admin.database.Reference | admin.database.Query = fbInstance.database().ref(actionPath)
-    return (ref as any)[action](options)
+    return (ref as any)[action](dataToWrite)
   } catch (err) {
     console.error(`Error with database:${action} at path "${actionPath}": `, err.message); // eslint-disable-line no-console
     throw err;

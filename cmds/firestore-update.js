@@ -6,14 +6,15 @@ const { firestoreWrite } = require('../lib/commands/firestore');
  * update data at specified path of Firestore. Work for both hosted and emulated environments
  * @param {string} program - Commander program
  */
-module.exports = function run(program) {
+module.exports = function firestoreUpdateCommand(program) {
   program
-    .command('firestore:update [path] [fixturePath]')
+    .command('firestore:update <path> [infile]')
     .description(
       'update data at specified path of Firestore. Work for both hosted and emulated environments'
     )
-    .action((opts, dbPath, fixturePath) => {
-      return firestoreWrite('update', dbPath, fixturePath, opts)
+    .option('-d, --data <data>', 'specify escaped JSON directly')
+    .action((dbPath, inFile, options) => {
+      return firestoreWrite('update', dbPath, inFile, options)
         .then(() => process.exit(0))
         .catch(() => process.exit(1));
     });

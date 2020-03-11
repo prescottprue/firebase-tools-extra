@@ -8,10 +8,11 @@ const { rtdbWrite } = require('../lib/commands/rtdb');
  */
 module.exports = function databasePushCommand(program) {
   program
-    .command('database:push [path]')
+    .command('database:push <path> [infile]')
     .description('add a new JSON object to a list of data in your Firebase')
-    .action((opts, dbPath) => {
-      return rtdbWrite('push', dbPath, opts)
+    .option('-d, --data <data>', 'specify escaped JSON directly')
+    .action((dbPath, inFile, options) => {
+      return rtdbWrite('push', dbPath, inFile, options)
         .then(() => process.exit(0))
         .catch(() => process.exit(1));
     });

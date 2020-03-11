@@ -23,7 +23,7 @@ declare module "utils" {
      * @param unparsed - Unparsed string to be parsed into JSON
      * @returns Parsed fixture value or path
      */
-    export function parseFixturePath(unparsed: string): any;
+    export function tryToJsonParse(unparsed: any): any;
     /**
      * Get environment variable based on the current CI environment
      * @param varNameRoot - variable name without the environment prefix
@@ -92,15 +92,17 @@ declare module "commands/firestore" {
     export function firestoreGet(actionPath: string, options?: any): Promise<any>;
     /**
      * Run write action for Firestore
+     *
      * @param action - Firestore action to run
      * @param actionPath - Path at which Firestore action should be run
      * @param thirdArg - Either path to fixture or string containing object
      * of options (parsed by cy.callFirestore custom Cypress command)
      * @param options - Whether or not to include meta data
+     * @param filePath
      * @param options.withMeta - Whether or not to include meta data
      * @returns Action within Firestore
      */
-    export function firestoreWrite(action: "add" | "update" | "get" | "set" | "delete" | undefined, actionPath: string, thirdArg?: any, options?: any): Promise<any>;
+    export function firestoreWrite(action: "add" | "update" | "get" | "set" | "delete" | undefined, actionPath: string, filePath?: string, options?: any): Promise<any>;
     /**
      * Delete data from Firestore
      * @param actionPath - Path at which Firestore action should be run
@@ -111,7 +113,7 @@ declare module "commands/firestore" {
 }
 declare module "commands/rtdb" {
     export type RTDBWriteAction = 'set' | 'push' | 'update';
-    export interface RTDBGetOptions {
+    export interface RTDBGetMethods {
         shallow?: boolean;
         orderBy?: string;
         orderByKey?: string;
@@ -122,6 +124,10 @@ declare module "commands/rtdb" {
         limitToFirst?: number;
         limitToLast?: number;
     }
+    export interface RTDBGetOptions extends RTDBGetMethods {
+        shallow?: boolean;
+        pretty?: boolean;
+    }
     /**
      * Write data to path of Real Time Database
      * @param actionPath - Pat of get
@@ -130,11 +136,14 @@ declare module "commands/rtdb" {
     export function rtdbGet(actionPath: string, options?: RTDBGetOptions): Promise<any>;
     /**
      * Write data to path of Real Time Database
+     *
      * @param action - Write action to run
      * @param actionPath - Path of action
+     * @param filePath
+     * @param options
      * @param thirdArg - Options
      */
-    export function rtdbWrite(action: "push" | "update" | "set" | undefined, actionPath: string, thirdArg?: any): Promise<any>;
+    export function rtdbWrite(action: "push" | "update" | "set" | undefined, actionPath: string, filePath?: string, options?: any): Promise<any>;
     /**
      * Remove data from path of Real Time Database
      * @param actionPath - Path to remove from database

@@ -8,12 +8,13 @@ const { firestoreWrite } = require('../lib/commands/firestore');
  */
 module.exports = function firestoreSetCommand(program) {
   program
-    .command('firestore:set [path] [fixturePath]')
+    .command('firestore:set <path> [infile]')
     .description(
       'set data to specified path of Firestore. Work for both hosted and emulated environments'
     )
-    .action((opts, dbPath, fixturePath) => {
-      return firestoreWrite('set', dbPath, fixturePath, opts)
+    .option('-d, --data <data>', 'specify escaped JSON directly')
+    .action((dbPath, inFile, options) => {
+      return firestoreWrite('set', dbPath, inFile, options)
         .then(() => process.exit(0))
         .catch(() => process.exit(1));
     });

@@ -6,7 +6,7 @@ const { firestoreDelete } = require('../lib/commands/firestore');
  * Build test configuration file then run cypress run command
  * @param {string} program - Commander program
  */
-module.exports = function run(program) {
+module.exports = function firestoreDeleteCommand(program) {
   program
     .command('firestore:delete [path]')
     .description(

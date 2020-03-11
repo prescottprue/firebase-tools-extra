@@ -8,10 +8,11 @@ const { rtdbWrite } = require('../lib/commands/rtdb');
  */
 module.exports = function databaseSetCommand(program) {
   program
-    .command('database:set [path]')
+    .command('database:set <path> [infile]')
     .description('store JSON data at the specified path')
-    .action((opts, dbPath) => {
-      return rtdbWrite('set', dbPath, opts)
+    .option('-d, --data <data>', 'specify escaped JSON directly')
+    .action((dbPath, inFile, options) => {
+      return rtdbWrite('set', dbPath, inFile, options)
         .then(() => process.exit(0))
         .catch(() => process.exit(1));
     });

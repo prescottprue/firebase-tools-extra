@@ -6,7 +6,7 @@ const createCustomToken = require('../lib/commands/createCustomToken');
  * Generate a custom auth token
  * @param {string} program - Commander program
  */
-module.exports = function databaseGetCommand(program) {
+module.exports = function createCustomTokenCommand(program) {
   program
     .command('createCustomToken [uid]')
     .description('Generate a custom auth token')

@@ -14,10 +14,24 @@ module.exports = function databaseGetCommand(program) {
     )
     .option('--shallow', 'return shallow response')
     .option('--order-by <key>', 'select a child key by which to order results')
+    .option('--order-by-key', 'order by key name')
+    .option('--order-by-value', 'order by primitive value')
     .option('--limit-to-first <num>', 'limit to the first <num> results')
     .option('--limit-to-last <num>', 'limit to the last <num> results')
-    .action((opts, dbPath) => {
-      return rtdbGet(dbPath, opts)
+    .option(
+      '--start-at <val>',
+      'start results at <val> (based on specified ordering)'
+    )
+    .option(
+      '--end-at <val>',
+      'end results at <val> (based on specified ordering)'
+    )
+    .option(
+      '--equal-to <val>',
+      'restrict results to <val> (based on specified ordering)'
+    )
+    .action((dbPath, options) => {
+      return rtdbGet(dbPath, options)
         .then(() => process.exit(0))
         .catch(() => process.exit(1));
     });
