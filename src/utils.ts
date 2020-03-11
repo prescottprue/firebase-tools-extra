@@ -21,7 +21,11 @@ export function isString(valToCheck: any): boolean {
  */
 export function readJsonFile(filePath: string): any {
   if (!existsSync(filePath)) {
-    return {};
+    const errMsg = `File does not exist at path "${filePath}"`
+    /* eslint-disable no-console */
+    console.error(errMsg)
+    /* eslint-enable no-console */
+    throw new Error(errMsg)
   }
 
   try {
@@ -242,6 +246,40 @@ export function getServiceAccount(envSlug?: string): ServiceAccount {
   /* eslint-enable @typescript-eslint/camelcase */
 }
 
+/**
+ * Get service account from either local file or environment variables
+ * @param envSlug - Environment option
+ * @returns Service account object
+ */
+export function getServiceAccountWithoutWarning(
+  envSlug?: string
+): ServiceAccount | null {
+  const serviceAccountPath = getServiceAccountPath(envSlug);
+  // Check for local service account file (Local dev)
+  if (existsSync(serviceAccountPath)) {
+    return readJsonFile(serviceAccountPath); // eslint-disable-line global-require, import/no-dynamic-require
+  }
+
+  // Use environment variables (CI)
+  const serviceAccountEnvVar = envVarBasedOnCIEnv('SERVICE_ACCOUNT', envSlug);
+  if (serviceAccountEnvVar) {
+    if (typeof serviceAccountEnvVar === 'string') {
+      try {
+        return JSON.parse(serviceAccountEnvVar);
+      } catch (err) {
+        /* eslint-disable no-console */
+        console.warn(
+          `Issue parsing "SERVICE_ACCOUNT" environment variable from string to object, returning string`
+        );
+        /* eslint-enable no-console */
+      }
+    }
+    return serviceAccountEnvVar;
+  }
+
+  return null;
+}
+
 let fbInstance: admin.app.App;
 
 /**
@@ -253,6 +291,10 @@ let fbInstance: admin.app.App;
  * @returns projectId for emulated project
  */
 function getEmulatedProjectId(): string {
+  const GCLOUD_PROJECT = envVarBasedOnCIEnv("GCLOUD_PROJECT")
+  if (GCLOUD_PROJECT) {
+    return GCLOUD_PROJECT
+  }
   const FIREBASE_PROJECT = envVarBasedOnCIEnv("FIREBASE_PROJECT")
   if (FIREBASE_PROJECT) {
     return FIREBASE_PROJECT
@@ -262,30 +304,8 @@ function getEmulatedProjectId(): string {
     return FIREBASE_PROJECT_ID
   }
   // Get service account from local file falling back to environment variables
-  const serviceAccount = getServiceAccount();
-  const projectIdFromSA = serviceAccount && serviceAccount.project_id
-  return projectIdFromSA || 'test'
-}
-
-/**
- * Get settings for Firestore from environment. Loads port and servicePath from
- * FIRESTORE_EMULATOR_HOST node environment variable if found, otherwise
- * defaults to port 8080 and servicePath "localhost".
- * @returns Firestore settings to be passed to firebase.firestore().settings
- */
-function firestoreSettingsFromEnv(): FirebaseFirestore.Settings {
-  const { FIRESTORE_EMULATOR_HOST } = process.env
-  if (typeof FIRESTORE_EMULATOR_HOST === 'undefined' || !isString(FIRESTORE_EMULATOR_HOST)) {
-    return {
-      servicePath: 'localhost',
-      port: 8080
-    }
-  }
-  const [servicePath, portStr] = FIRESTORE_EMULATOR_HOST.split(':')
-  return {
-    servicePath,
-    port: parseInt(portStr, 10)
-  }
+  const serviceAccount = getServiceAccountWithoutWarning();
+  return serviceAccount?.project_id || 'test'
 }
 
 /**
@@ -294,57 +314,89 @@ function firestoreSettingsFromEnv(): FirebaseFirestore.Settings {
  * @returns Initialized Firebase instance
  */
 export function initializeFirebase(): admin.app.App {
-  try {
-    if (!fbInstance) {
-      // Use emulator if it exists in environment
-      if (process.env.FIRESTORE_EMULATOR_HOST || process.env.FIREBASE_DATABASE_EMULATOR_HOST) {
-        // TODO: Look into using @firebase/testing in place of admin here to allow for
-        // usage of clearFirestoreData (see https://github.com/prescottprue/cypress-firebase/issues/73 for more info)
-        const projectId = getEmulatedProjectId()
-
-        const fbConfig: any = { projectId }
-        // Initialize RTDB with databaseURL from FIREBASE_DATABASE_EMULATOR_HOST to allow for RTDB actions
-        // within Emulator
-        if (process.env.FIREBASE_DATABASE_EMULATOR_HOST) {
-          const [, portStr] = process.env.FIREBASE_DATABASE_EMULATOR_HOST.split(':')
-          fbConfig.databaseURL = `http://localhost:${portStr || '9000'}?ns=${fbConfig.projectId || 'local'}`
-        }
-
-        fbInstance = admin.initializeApp(fbConfig)
-        if (process.env.FIRESTORE_EMULATOR_HOST) {
-          const firestoreSettings = firestoreSettingsFromEnv()
-          admin.firestore().settings(firestoreSettings)
-        }
-      } else {
-        // Get service account from local file falling back to environment variables
-        const serviceAccount = getServiceAccount();
-        const projectId = serviceAccount && serviceAccount.project_id
-        if (!isString(projectId)) {
-          const missingProjectIdErr =
-            "Error project_id from service account to initialize Firebase.";
-          console.error(missingProjectIdErr); // eslint-disable-line no-console
-          throw new Error(missingProjectIdErr);
-        }
-        const cleanProjectId = projectId.replace(
-          "firebase-top-agent-int",
-          "top-agent-int"
-        );
-
-        fbInstance = admin.initializeApp({
-          credential: admin.credential.cert((serviceAccount as any)),
-          databaseURL: `https://${cleanProjectId}.firebaseio.com`
-        });
-      }
-    }
-    return fbInstance;
-  } catch (err) {
-    /* eslint-disable no-console */
-    console.error(
-      "Error initializing firebase-admin instance from service account."
-    );
-    /* eslint-enable no-console */
-    throw err;
+  if (fbInstance) {
+    return fbInstance
   }
+  // Use emulator if it exists in environment
+  const { FIRESTORE_EMULATOR_HOST, FIREBASE_DATABASE_EMULATOR_HOST } = process.env
+  if (FIRESTORE_EMULATOR_HOST || FIREBASE_DATABASE_EMULATOR_HOST) {
+    try {
+      // TODO: Look into using @firebase/testing in place of admin here to allow for
+      // usage of clearFirestoreData (see https://github.com/prescottprue/cypress-firebase/issues/73 for more info)
+      const projectId = getEmulatedProjectId()
+  
+      const fbConfig: any = { projectId }
+      // Initialize RTDB with databaseURL from FIREBASE_DATABASE_EMULATOR_HOST to allow for RTDB actions
+      // within Emulator
+      if (FIREBASE_DATABASE_EMULATOR_HOST) {
+        fbConfig.databaseURL = `http://${FIREBASE_DATABASE_EMULATOR_HOST}?ns=${fbConfig.projectId || 'local'}`
+        /* eslint-disable no-console */
+        console.log('Using RTDB emulator with DB URL:', fbConfig.databaseURL);
+        /* eslint-enable no-console */
+      }
+      
+      // Add service account credential if it exists so that custom auth tokens can be generated
+      const serviceAccount = getServiceAccountWithoutWarning();
+      if (serviceAccount) {
+        fbConfig.credential = admin.credential.cert((serviceAccount as any));
+      }
+  
+      fbInstance = admin.initializeApp(fbConfig)
+      if (FIRESTORE_EMULATOR_HOST) {
+        const [servicePath, portStr] = FIRESTORE_EMULATOR_HOST.split(':')
+        const firestoreSettings = {
+          servicePath,
+          port: parseInt(portStr, 10)
+        }
+        /* eslint-disable no-console */
+        console.log(
+          'Using Firestore emulator with settings:',
+          firestoreSettings
+        );
+        /* eslint-enable no-console */
+        admin.firestore().settings(firestoreSettings)
+      }
+    } catch(err) {
+      /* eslint-disable no-console */
+      console.error(
+        "Error initializing firebase-admin instance with emulator settings.",
+        err.message
+      );
+      /* eslint-enable no-console */
+      throw err;
+    }
+  } else {
+    try {
+      // Get service account from local file falling back to environment variables
+      const serviceAccount = getServiceAccount();
+      const projectId = serviceAccount && serviceAccount.project_id
+      if (!isString(projectId)) {
+        const missingProjectIdErr =
+          "Error project_id from service account to initialize Firebase.";
+        console.error(missingProjectIdErr); // eslint-disable-line no-console
+        throw new Error(missingProjectIdErr);
+      }
+      const cleanProjectId = projectId.replace(
+        "firebase-top-agent-int",
+        "top-agent-int"
+      );
+
+      fbInstance = admin.initializeApp({
+        credential: admin.credential.cert((serviceAccount as any)),
+        databaseURL: `https://${cleanProjectId}.firebaseio.com`
+      });
+    } catch (err) {
+      /* eslint-disable no-console */
+      console.error(
+        "Error initializing firebase-admin instance from service account.",
+        err.message
+      );
+      /* eslint-enable no-console */
+      throw err;
+    }
+  }
+  return fbInstance;
+  
 }
 
 /**

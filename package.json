@@ -22,10 +22,10 @@
     "build:typefile": "tsc --declaration --outFile index.d.ts --emitDeclarationOnly",
     "build:lib": "tsc",
     "build:esm": "tsc && tsc -m es6 --outDir lib-esm",
-    "watch": "yarn build:commonjs -- --watch",
-    "watch:es": "yarn build:es -- --watch",
+    "watch": "yarn build:commonjs --watch",
+    "watch:es": "yarn build:es --watch",
     "lint": "eslint src/**/*.ts --ext .ts",
-    "lint:fix": "yarn lint -- --fix",
+    "lint:fix": "yarn lint --fix",
     "prepare": "yarn clean && yarn build"
   },
   "keywords": [

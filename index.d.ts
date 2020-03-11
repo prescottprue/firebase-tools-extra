@@ -53,6 +53,12 @@ declare module "utils" {
      */
     export function getServiceAccount(envSlug?: string): ServiceAccount;
     /**
+     * Get service account from either local file or environment variables
+     * @param envSlug - Environment option
+     * @returns Service account object
+     */
+    export function getServiceAccountWithoutWarning(envSlug?: string): ServiceAccount | null;
+    /**
      * Initialize Firebase instance from service account (from either local
      * serviceAccount.json or environment variables)
      * @returns Initialized Firebase instance
@@ -86,21 +92,19 @@ declare module "utils" {
 declare module "commands/firestore" {
     export type FirestoreAction = 'get' | 'set' | 'add' | 'update' | 'delete';
     /**
+     * Get data from Firestore at given path (works for documents & collections)
      * @param actionPath - Path where to run firestore get
      * @param options - Options object
+     * @returns Data value that results from running get within Firestore
      */
     export function firestoreGet(actionPath: string, options?: any): Promise<any>;
     /**
      * Run write action for Firestore
-     *
      * @param action - Firestore action to run
      * @param actionPath - Path at which Firestore action should be run
-     * @param thirdArg - Either path to fixture or string containing object
-     * of options (parsed by cy.callFirestore custom Cypress command)
-     * @param options - Whether or not to include meta data
-     * @param filePath
-     * @param options.withMeta - Whether or not to include meta data
-     * @returns Action within Firestore
+     * @param filePath - Path to file to write
+     * @param options - Options object
+     * @returns Results of running action within Firestore
      */
     export function firestoreWrite(action: "add" | "update" | "get" | "set" | "delete" | undefined, actionPath: string, filePath?: string, options?: any): Promise<any>;
     /**
@@ -113,6 +117,9 @@ declare module "commands/firestore" {
 }
 declare module "commands/rtdb" {
     export type RTDBWriteAction = 'set' | 'push' | 'update';
+    /**
+     * Methods that are applicabale on a ref for a get action
+     */
     export interface RTDBGetMethods {
         shallow?: boolean;
         orderBy?: string;
@@ -124,6 +131,9 @@ declare module "commands/rtdb" {
         limitToFirst?: number;
         limitToLast?: number;
     }
+    /**
+     * Options for RTDB get action
+     */
     export interface RTDBGetOptions extends RTDBGetMethods {
         shallow?: boolean;
         pretty?: boolean;
@@ -136,12 +146,10 @@ declare module "commands/rtdb" {
     export function rtdbGet(actionPath: string, options?: RTDBGetOptions): Promise<any>;
     /**
      * Write data to path of Real Time Database
-     *
      * @param action - Write action to run
      * @param actionPath - Path of action
-     * @param filePath
-     * @param options
-     * @param thirdArg - Options
+     * @param filePath - Path of file to write to RTDB
+     * @param options - Options
      */
     export function rtdbWrite(action: "push" | "update" | "set" | undefined, actionPath: string, filePath?: string, options?: any): Promise<any>;
     /**
