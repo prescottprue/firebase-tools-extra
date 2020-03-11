@@ -9,8 +9,10 @@ import {
 export type FirestoreAction = 'get' | 'set' | 'add' | 'update' | 'delete'
 
 /**
+ * Get data from Firestore at given path (works for documents & collections)
  * @param actionPath - Path where to run firestore get
  * @param options - Options object
+ * @returns Data value that results from running get within Firestore
  */
 export async function firestoreGet(actionPath: string, options?: any): Promise<any> {
   const fbInstance = initializeFirebase();
@@ -49,15 +51,11 @@ export async function firestoreGet(actionPath: string, options?: any): Promise<a
 
 /**
  * Run write action for Firestore
- *
  * @param action - Firestore action to run
  * @param actionPath - Path at which Firestore action should be run
- * @param thirdArg - Either path to fixture or string containing object
- * of options (parsed by cy.callFirestore custom Cypress command)
- * @param options - Whether or not to include meta data
- * @param filePath
- * @param options.withMeta - Whether or not to include meta data
- * @returns Action within Firestore
+ * @param filePath - Path to file to write
+ * @param options - Options object
+ * @returns Results of running action within Firestore
  */
 export async function firestoreWrite(
   action: FirestoreAction = "set",

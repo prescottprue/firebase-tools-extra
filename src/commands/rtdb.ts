@@ -3,6 +3,9 @@ import { initializeFirebase, readJsonFile, tryToJsonParse } from "../utils";
 
 export type RTDBWriteAction = 'set' | 'push' | 'update'
 
+/**
+ * Methods that are applicabale on a ref for a get action
+ */
 export interface RTDBGetMethods {
   shallow?: boolean
   orderBy?: string
@@ -15,12 +18,16 @@ export interface RTDBGetMethods {
   limitToLast?: number
 }
 
+/**
+ * Options for RTDB get action
+ */
 export interface RTDBGetOptions extends RTDBGetMethods {
   shallow?: boolean
   pretty?: boolean
 }
 
 /**
+ * Add query options to RTDB reference
  * @param baseRef - Base RTDB reference
  * @param options - Options for ref
  * @returns RTDB Reference
@@ -71,12 +78,10 @@ export async function rtdbGet(actionPath: string, options?: RTDBGetOptions): Pro
 
 /**
  * Write data to path of Real Time Database
- *
  * @param action - Write action to run
  * @param actionPath - Path of action
- * @param filePath
- * @param options
- * @param thirdArg - Options
+ * @param filePath - Path of file to write to RTDB
+ * @param options - Options
  */
 export async function rtdbWrite(action: RTDBWriteAction = "set", actionPath: string, filePath?: string, options?: any): Promise<any> {
   const fbInstance = initializeFirebase();
