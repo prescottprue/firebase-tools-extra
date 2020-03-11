@@ -1,79 +1,114 @@
 import * as admin from 'firebase-admin'
-import { isObject, isDate } from "lodash";
-import { parseFixturePath, initializeFirebase } from "../utils";
+import { initializeFirebase, readJsonFile, tryToJsonParse } from "../utils";
 
-export type RTDBAction = 'get' | 'set' | 'push' | 'update' | 'remove'
-export type RTDBMethod = 'once' | 'set' | 'push' | 'update' | 'remove'
+export type RTDBWriteAction = 'set' | 'push' | 'update'
+
+export interface RTDBGetMethods {
+  shallow?: boolean
+  orderBy?: string
+  orderByKey?: string
+  orderByValue?: string
+  equalTo?: any
+  startAt?: any
+  endAt?: any
+  limitToFirst?: number
+  limitToLast?: number
+}
+
+export interface RTDBGetOptions extends RTDBGetMethods {
+  shallow?: boolean
+  pretty?: boolean
+}
 
 /**
- * Run action for Firestore
- * @param action - Firestore action to run
- * @param actionPath - Path at which Firestore action should be run
- * @param thirdArg - Either path to fixture or string containing object
- * of options (parsed by cy.callFirestore custom Cypress command)
- * @returns Action within Firestore
+ * @param baseRef - Base RTDB reference
+ * @param options - Options for ref
+ * @returns RTDB Reference
  */
-export default async function rtdbAction(
-  action: RTDBAction = "set",
-  actionPath: string,
-  thirdArg?: any
-): Promise<any> {
-  const validActionNames: RTDBAction[] = ['get', 'set', 'push', 'update', 'remove']
-  // Throw for invalid action name
-  if (!validActionNames.includes(action)) {
-    throw new Error(`"${action}" is not a valid RTDB action. Use one of the following: ${validActionNames.join(', ')}`)
-  }
-
-  const fbInstance = initializeFirebase();
-  const parsedVal = parseFixturePath(thirdArg);
-  const options = parsedVal;
-
-  // TODO: Support parsing other values to timestamps
-  // Attempt to convert createdAt to a timestamp
-  if (isObject(parsedVal) && options.createdAt) {
-    try {
-      const dateVal = new Date(options.createdAt);
-      if (isDate(dateVal)) {
-        options.createdAt = dateVal;
-      }
-    } catch (err) {
-      console.log('Error parsing date value for createdAt') // eslint-disable-line
+function optionsToRtdbRef(baseRef: admin.database.Reference, options?: RTDBGetMethods): admin.database.Reference | admin.database.Query {
+  const optionsToAdd = [
+    'orderByChild',
+    'orderByKey',
+    'orderByValue',
+    'equalTo',
+    'limitToFirst',
+    'limitToLast',
+    'startAt',
+    'endAt'
+  ];
+  return optionsToAdd.reduce((acc: admin.database.Reference | admin.database.Query, optionName: string) => {
+    if (options && (options as any)[optionName]) {
+      return (acc as any)[optionName]((options as any)[optionName]);
     }
-  }
+    return acc
+  }, baseRef);
+}
 
-  const actionNameMap = {
-    get: 'once'
-  }
-
-  const cleanActionName: RTDBMethod = (actionNameMap as any)[action] || action
+/**
+ * Write data to path of Real Time Database
+ * @param actionPath - Pat of get
+ * @param options - Get options object
+ */
+export async function rtdbGet(actionPath: string, options?: RTDBGetOptions): Promise<any> {
+  const fbInstance = initializeFirebase();
 
   try {
-    let ref: admin.database.Reference | admin.database.Query = fbInstance.database().ref(actionPath)
-    if (thirdArg) {
-      if(thirdArg.orderByChild) {
-        ref = ref.orderByChild(thirdArg.orderByChild)
-      }
-      if(thirdArg.equalTo) {
-        ref = ref.equalTo(thirdArg.equalTo)
-      }
-      if (thirdArg.limitToLast) {
-        ref = ref.limitToLast(thirdArg.limitToLast)
-      }
-    }
-    const res = await (ref as any)[cleanActionName](action === 'get' ? 'value' : options)
+    const baseRef: admin.database.Reference = fbInstance.database().ref(actionPath)
+    const ref = optionsToRtdbRef(baseRef, options)
+    const res = await ref.once('value')
     
     // Write results to stdout to be loaded in tests
-    if (action === "get") {
-      let dataToWrite = res.val()
-      if (thirdArg) {
-        if (thirdArg.shallow) {
-          dataToWrite = Object.keys(dataToWrite)
-        }
-      }
-      process.stdout.write(dataToWrite && JSON.stringify(dataToWrite));
+    // TODO: Support acutal shallow queries (may require Legacy token to use REST API)
+    const dataToWrite = options?.shallow ? Object.keys(res.val()) : res.val()
+    if (dataToWrite) {
+      process.stdout.write(options?.pretty ? JSON.stringify(dataToWrite, null, 2) : JSON.stringify(dataToWrite));
     }
   } catch (err) {
-    console.error(`Error with RTDB ${action} at path "${actionPath}": `, err.message); // eslint-disable-line no-console
+    console.error(`Error with database:get at path "${actionPath}": `, err.message); // eslint-disable-line no-console
+    throw err;
+  }
+}
+
+/**
+ * Write data to path of Real Time Database
+ *
+ * @param action - Write action to run
+ * @param actionPath - Path of action
+ * @param filePath
+ * @param options
+ * @param thirdArg - Options
+ */
+export async function rtdbWrite(action: RTDBWriteAction = "set", actionPath: string, filePath?: string, options?: any): Promise<any> {
+  const fbInstance = initializeFirebase();
+  if (!filePath && !options?.data) {
+    const errMsg = `File path or data is required to run ${action} at path "${actionPath}"`
+    console.error(errMsg) // eslint-disable-line no-console
+    throw new Error(errMsg)
+  }
+  const dataToWrite = options?.data ? tryToJsonParse(options.data) : readJsonFile(filePath as string)
+
+  // TODO: Support parsing values to server timestamps (check if {.sv: "timestamp"} is auto converted)
+
+  try {
+    const ref: admin.database.Reference | admin.database.Query = fbInstance.database().ref(actionPath)
+    return (ref as any)[action](dataToWrite)
+  } catch (err) {
+    console.error(`Error with database:${action} at path "${actionPath}": `, err.message); // eslint-disable-line no-console
+    throw err;
+  }
+}
+
+/**
+ * Remove data from path of Real Time Database
+ * @param actionPath - Path to remove from database
+ */
+export async function rtdbRemove(actionPath: string): Promise<void> {
+  const fbInstance = initializeFirebase();
+
+  try {
+    return fbInstance.database().ref(actionPath).remove()
+  } catch (err) {
+    console.error(`Error with database:remove at path "${actionPath}": `, err.message); // eslint-disable-line no-console
     throw err;
   }
 }

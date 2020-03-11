@@ -33,6 +33,7 @@ module.exports = {
     'jsdoc/newline-after-description': 0,
     'jsdoc/require-returns-type': 0,
     'jsdoc/require-param-type': 0,
+    'no-undef': 0 // handled by typescript noUnusedLocals: true option
   },
   overrides: [
     {

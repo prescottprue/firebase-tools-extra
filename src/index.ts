@@ -1,6 +1,13 @@
-import firestoreAction from './commands/firestore';
-import rtdbAction from './commands/rtdb';
+import { firestoreGet, firestoreWrite, firestoreDelete } from './commands/firestore';
+import { rtdbGet, rtdbWrite, rtdbRemove } from './commands/rtdb';
 import createCustomToken from './commands/createCustomToken';
 
-export { rtdbAction, createCustomToken }
-export default firestoreAction;
+export {
+  firestoreGet,
+  firestoreWrite,
+  firestoreDelete,
+  rtdbGet,
+  rtdbWrite,
+  rtdbRemove,
+  createCustomToken
+}

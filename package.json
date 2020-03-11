@@ -1,6 +1,6 @@
 {
   "name": "firebase-tools-extra",
-  "version": "0.6.0",
+  "version": "0.0.0-development",
   "description": "Extra functionality for firebase-tools with support for emulators and auth through service account.",
   "main": "lib/index.js",
   "module": "lib/index.js",
@@ -18,15 +18,15 @@
   ],
   "scripts": {
     "clean": "rimraf lib lib-esm",
-    "build": "npm run build:lib && npm run build:esm && npm run build:typefile",
+    "build": "yarn build:lib && yarn build:esm && yarn build:typefile",
     "build:typefile": "tsc --declaration --outFile index.d.ts --emitDeclarationOnly",
     "build:lib": "tsc",
     "build:esm": "tsc && tsc -m es6 --outDir lib-esm",
-    "watch": "npm run build:commonjs -- --watch",
-    "watch:es": "npm run build:es -- --watch",
+    "watch": "yarn build:commonjs -- --watch",
+    "watch:es": "yarn build:es -- --watch",
     "lint": "eslint src/**/*.ts --ext .ts",
-    "lint:fix": "npm run lint -- --fix",
-    "prepare": "npm run clean && npm run build"
+    "lint:fix": "yarn lint -- --fix",
+    "prepare": "yarn clean && yarn build"
   },
   "keywords": [
     "firebase-tools",
@@ -34,14 +34,15 @@
     "cli"
   ],
   "dependencies": {
+    "commander": "^4.1.1",
     "firebase-admin": "^8.9.2",
-    "lodash": "^4.17.15",
-    "yargs": "^14.2.0"
+    "lodash": "^4.17.15"
   },
   "devDependencies": {
+    "@commitlint/cli": "^8.3.5",
+    "@commitlint/config-conventional": "^8.3.4",
     "@types/lodash": "^4.14.149",
     "@types/node": "^13.9.0",
-    "@types/yargs": "^15.0.3",
     "@typescript-eslint/eslint-plugin": "^2.23.0",
     "@typescript-eslint/parser": "^2.23.0",
     "eslint": "^6.8.0",
@@ -71,14 +72,15 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "lint-staged"
+      "commit-msg": "commitlint -E HUSKY_GIT_PARAMS",
+      "pre-commit": "yarn build:typefile && git add . && lint-staged"
     }
   },
   "lint-staged": {
     "*.{json,md}": [
       "prettier --write"
     ],
-    "*.{ts}": [
+    "*.{js,ts}": [
       "eslint --fix"
     ]
   }

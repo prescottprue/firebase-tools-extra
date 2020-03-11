@@ -1,178 +1,25 @@
 #!/usr/bin/env node
-/* eslint-disable consistent-return, @typescript-eslint/no-var-requires, @typescript-eslint/explicit-function-return-type */
-const yargs = require('yargs');
-const firestoreAction = require('../lib').default;
-const { rtdbAction, createCustomToken } = require('../lib');
+const program = require('commander'); // eslint-disable-line @typescript-eslint/no-var-requires
+const pkg = require('../package.json'); // eslint-disable-line @typescript-eslint/no-var-requires
 
-const commands = [
-  {
-    command: 'firestore [action] [actionPath] [fixturePath]',
-    describe: 'run action on Firebase using service account',
-    builder: (yargsInstance) => {
-      yargsInstance.positional('action', {
-        describe: 'action to run on Firestore',
-        default: 'set'
-      });
-      yargsInstance.positional('actionPath', {
-        describe: 'path of action to run on Firestore',
-        default: 'projects/test-project'
-      });
-      yargsInstance.positional('fixturePath', {
-        describe: 'path of fixture to use ',
-        default: 'fakeProject.json'
-      });
-    },
-    handler: (argv) => {
-      // Log if verbose option is passed
-      if (argv.verbose) {
-        /* eslint-disable no-console */
-        console.info(
-          `firestore command on :${argv.action} at ${argv.actionPath}`
-        );
-        /* eslint-enable no-console */
-      }
-      return argv;
-    }
-  },
-  {
-    command: 'database:get [actionPath]',
-    describe: 'fetch and print JSON data at the specified path',
-    builder: (yargsInstance) => {
-      yargsInstance.positional('actionPath', {
-        describe: 'path of action to run on Firestore',
-        default: 'projects/test-project'
-      });
-      yargsInstance.option('order-by-child', {
-        describe: 'order by a primative value'
-      });
-      yargsInstance.option('equal-to', {
-        describe: 'restrict results to <val> (based on specified ordering)'
-      });
-      yargsInstance.option('limit-to-last', {
-        describe: 'limit to the last <num> results'
-      });
-      yargsInstance.option('limit-to-first', {
-        describe: 'limit to the first <num> results'
-      });
-      yargsInstance.option('order-by-key', {
-        describe: 'order by key name'
-      });
-      yargsInstance.option('order-by-value', {
-        describe: 'order by primitive value'
-      });
-      yargsInstance.option('start-at', {
-        describe: 'start results at <val> (based on specified ordering)'
-      });
-      yargsInstance.option('end-at', {
-        describe: 'end results at <val> (based on specified ordering)'
-      });
-    }
-  },
-  {
-    command: 'database:set [actionPath]',
-    describe: 'store JSON data at the specified path via STDIN, arg, or file',
-    builder: (yargsInstance) => {
-      yargsInstance.positional('actionPath', {
-        describe: 'path of action to run on Firestore',
-        default: 'projects/test-project'
-      });
-    }
-  },
-  {
-    command: 'database:update [actionPath]',
-    describe: 'update some of the keys for the defined path in your Firebase',
-    builder: (yargsInstance) => {
-      yargsInstance.positional('actionPath', {
-        describe: 'path of action to run on Firestore',
-        default: 'projects/test-project'
-      });
-    }
-  },
-  {
-    command: 'database:delete [actionPath]',
-    describe: 'remove data from your Firebase at the specified path',
-    builder: (yargsInstance) => {
-      yargsInstance.positional('actionPath', {
-        describe: 'path of action to run on Firestore',
-        default: 'projects/test-project'
-      });
-    }
-  },
-  {
-    command: 'database:remove [actionPath]',
-    describe: 'remove data from your Firebase at the specified path',
-    builder: (yargsInstance) => {
-      yargsInstance.positional('actionPath', {
-        describe: 'path of action to run on Firestore',
-        default: 'projects/test-project'
-      });
-    }
-  },
-  {
-    command: 'createCustomToken [uid]',
-    describe: 'create a custom auth token using a service account',
-    builder: (yargsInstance) => {
-      yargsInstance.positional('uid', {
-        describe: 'UID of user for which to generate custom token'
-      });
-    }
-  }
-];
+program.version(pkg.version);
 
-/**
- * @param argv - argv from yargs
- * @returns {Promise} Resolves with action results
- */
-function runAction(argv) {
-  const args = argv._ || []
-  const cleanArgs = args.filter((val) => val && (val !== 'npx'))
-  if (cleanArgs[0] === 'createCustomToken') {
-    return createCustomToken(...cleanArgs.slice(1));
-  }
-  if (cleanArgs[0] === 'firestore') {
-    return firestoreAction(...cleanArgs.slice(1));
-  }
-  const rtdbArgs = argv.d ? [cleanArgs[1], argv.d] : cleanArgs.splice(1);
-  const action = cleanArgs[0].split(':')[1]
-  if (action === 'get') {
-    return rtdbAction(action, rtdbArgs[0], argv)
-  }
-  return rtdbAction(action, ...rtdbArgs)
+require('../cmds')(program); // eslint-disable-line @typescript-eslint/no-var-requires
+
+program.on('*', name => {
+  /* eslint-disable no-console */
+  console.log(
+    `'${name}' is not a known command. See 'firebase-tools-extra --help':`
+  );
+  /* eslint-enable no-console */
+  program.outputHelp();
+  process.exit(1);
+});
+
+program.parse(process.argv);
+
+if (program.rawArgs.length < 3) {
+  console.log("No command specified. See 'firebase-tools-extra --help':"); // eslint-disable-line no-console
+  program.outputHelp();
+  process.exit(1);
 }
-
-(function runFirebaseExtra() {
-  let currentArgs;
-  try {
-    // TODO: Replace with commandDir when moving config to a directory
-    /* eslint-disable guard-for-in, no-restricted-syntax */
-    for (const command in commands) {
-      /* eslint-enable guard-for-in, no-restricted-syntax */
-      currentArgs = yargs.command(command);
-    }
-    yargs.option('withMeta', {
-      alias: 'm',
-      default: false
-    });
-    /* eslint-disable no-unused-expressions */
-    const { argv } = currentArgs.option('verbose', {
-      alias: 'v',
-      default: false
-    });
-    return runAction(argv)
-      .then(() => {
-        process.exit(0)
-      })
-      .catch((err) => {
-        /* eslint-disable no-console */
-        console.error(`Error running firebase action: ${err.message || 'Error'}`);
-        /* eslint-enable no-console */
-        process.exit(1)
-      })
-    /* eslint-enable no-unused-expressions */
-  } catch (err) {
-    /* eslint-disable no-console */
-    console.error(`Error running firebase action: ${err.message || 'Error'} ${err.stack}`);
-    /* eslint-enable no-console */
-    process.exit(1);
-  }
-}());

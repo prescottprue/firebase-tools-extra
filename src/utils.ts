@@ -1,5 +1,4 @@
 import * as admin from "firebase-admin";
-import { get } from "lodash";
 import { join } from "path";
 import { existsSync, readFileSync } from "fs";
 import { DEFAULT_TEST_FOLDER_PATH, FALLBACK_TEST_FOLDER_PATH } from "./constants";
@@ -46,7 +45,7 @@ export function readJsonFile(filePath: string): any {
  * @param unparsed - Unparsed string to be parsed into JSON
  * @returns Parsed fixture value or path
  */
-export function parseFixturePath(unparsed: string): any {
+export function tryToJsonParse(unparsed: any): any {
   if (isString(unparsed)) {
     try {
       return JSON.parse(unparsed);
@@ -264,7 +263,7 @@ function getEmulatedProjectId(): string {
   }
   // Get service account from local file falling back to environment variables
   const serviceAccount = getServiceAccount();
-  const projectIdFromSA = get(serviceAccount, "project_id");
+  const projectIdFromSA = serviceAccount && serviceAccount.project_id
   return projectIdFromSA || 'test'
 }
 
@@ -319,7 +318,7 @@ export function initializeFirebase(): admin.app.App {
       } else {
         // Get service account from local file falling back to environment variables
         const serviceAccount = getServiceAccount();
-        const projectId = get(serviceAccount, "project_id");
+        const projectId = serviceAccount && serviceAccount.project_id
         if (!isString(projectId)) {
           const missingProjectIdErr =
             "Error project_id from service account to initialize Firebase.";
