@@ -23,17 +23,27 @@ module.exports = {
   },
   rules: {
     '@typescript-eslint/no-explicit-any': 0,
-    'comma-dangle': [2, 'never'],
+    'import/prefer-default-export': 0,
     'no-shadow': 0,
+    'consistent-return': 0,
     'no-new': 0,
     'new-cap': 0,
-    'max-len': 0,
     'no-return-await': 2,
+    'jsdoc/newline-after-description': 0,
+    'jsdoc/require-returns-type': 0,
+    'jsdoc/require-param-type': 0,
     'import/extensions': 0,
     'jsdoc/newline-after-description': 0,
     'jsdoc/require-returns-type': 0,
     'jsdoc/require-param-type': 0,
-    'no-undef': 0 // handled by typescript noUnusedLocals: true option
+    'no-undef': 0, // handled by typescript noUnusedLocals: true option
+    'prettier/prettier': [
+      'error',
+      {
+        singleQuote: true, // airbnb
+        trailingComma: 'all', // airbnb
+      }
+    ]
   },
   overrides: [
     {

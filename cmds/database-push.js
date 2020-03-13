@@ -11,6 +11,7 @@ module.exports = function databasePushCommand(program) {
     .command('database:push <path> [infile]')
     .description('add a new JSON object to a list of data in your Firebase')
     .option('-d, --data <data>', 'specify escaped JSON directly')
+    .option('--emulator', 'use RTDB emulator')
     .action((dbPath, inFile, options) => {
       return rtdbWrite('push', dbPath, inFile, options)
         .then(() => process.exit(0))

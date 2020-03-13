@@ -30,6 +30,7 @@ module.exports = function databaseGetCommand(program) {
       '--equal-to <val>',
       'restrict results to <val> (based on specified ordering)'
     )
+    .option('--emulator', 'use RTDB emulator')
     .action((dbPath, options) => {
       return rtdbGet(dbPath, options)
         .then(() => process.exit(0))

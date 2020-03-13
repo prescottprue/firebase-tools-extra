@@ -13,6 +13,7 @@ module.exports = function databaseUpdateCommand(program) {
       'fetch and print JSON data at the specified path from database emulator'
     )
     .option('-d, --data <data>', 'specify escaped JSON directly')
+    .option('--emulator', 'use RTDB emulator')
     .action((dbPath, inFile, options) => {
       return rtdbWrite('update', dbPath, inFile, options)
         .then(() => process.exit(0))

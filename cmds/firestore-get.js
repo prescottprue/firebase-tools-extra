@@ -12,7 +12,9 @@ module.exports = function firestoreGetCommand(program) {
     .description(
       'fetch and print JSON data at the specified path of Firestore. Works for both hosted and emulated environments'
     )
-    .action((opts, dbPath) => {
+    .option('-o, --output <filename>', 'save output to the specified file')
+    .option('--emulator', 'use Firestore emulator')
+    .action((dbPath, opts) => {
       return firestoreGet(dbPath, opts)
         .then(() => process.exit(0))
         .catch(() => process.exit(1));

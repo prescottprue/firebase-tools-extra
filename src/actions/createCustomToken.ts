@@ -1,12 +1,14 @@
-import * as admin from 'firebase-admin'
-import { getServiceAccount, envVarBasedOnCIEnv } from '../utils'
-
+import * as admin from 'firebase-admin';
+import { getServiceAccount, envVarBasedOnCIEnv } from '../utils';
 
 /**
  * @param uid - User's UID
  * @param envName - Name of the environment
  */
-export default async function createCustomToken(uid: string, envName?: string): Promise<string> {
+export default async function createCustomToken(
+  uid: string,
+  envName?: string,
+): Promise<string> {
   // Get service account from local file falling back to environment variables
   const serviceAccount = getServiceAccount(envName);
 
@@ -22,9 +24,9 @@ export default async function createCustomToken(uid: string, envName?: string): 
   const appFromSA = admin.initializeApp(
     {
       credential: admin.credential.cert(serviceAccount as any),
-      databaseURL: `https://${cleanedProjectId}.firebaseio.com`
+      databaseURL: `https://${cleanedProjectId}.firebaseio.com`,
     },
-    'withServiceAccount'
+    'withServiceAccount',
   );
 
   // Read developer claims object from cypress/config.json
@@ -37,11 +39,13 @@ export default async function createCustomToken(uid: string, envName?: string): 
 
   // Create auth token
   try {
-    const token = await appFromSA.auth().createCustomToken(uid, defaultDeveloperClaims)
+    const token = await appFromSA
+      .auth()
+      .createCustomToken(uid, defaultDeveloperClaims);
     process.stdout.write(token);
-    return token
-  } catch(err) {
-    console.error(`Error generating custom token for uid: ${uid}`, err)  // eslint-disable-line no-console
-    throw err
+    return token;
+  } catch (err) {
+    console.error(`Error generating custom token for uid: ${uid}`, err); // eslint-disable-line no-console
+    throw err;
   }
 }

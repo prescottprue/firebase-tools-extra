@@ -1,9 +1,10 @@
-import * as admin from "firebase-admin";
-import { join } from "path";
-import { existsSync, readFileSync } from "fs";
-import { DEFAULT_TEST_FOLDER_PATH, FALLBACK_TEST_FOLDER_PATH } from "./constants";
+import * as admin from 'firebase-admin';
+import { join } from 'path';
+import { existsSync, readFileSync, writeFile } from 'fs';
+import { promisify } from 'util';
+import * as logger from './logger';
 
-export const DEFAULT_BASE_PATH = process.cwd();
+export const writeFilePromise = promisify(writeFile);
 
 /**
  * Check whether a value is a string or not
@@ -11,7 +12,7 @@ export const DEFAULT_BASE_PATH = process.cwd();
  * @returns Whether or not value is a string
  */
 export function isString(valToCheck: any): boolean {
-  return typeof valToCheck === 'string' || valToCheck instanceof String
+  return typeof valToCheck === 'string' || valToCheck instanceof String;
 }
 
 /**
@@ -21,23 +22,23 @@ export function isString(valToCheck: any): boolean {
  */
 export function readJsonFile(filePath: string): any {
   if (!existsSync(filePath)) {
-    const errMsg = `File does not exist at path "${filePath}"`
+    const errMsg = `File does not exist at path "${filePath}"`;
     /* eslint-disable no-console */
-    console.error(errMsg)
+    logger.error(errMsg);
     /* eslint-enable no-console */
-    throw new Error(errMsg)
+    throw new Error(errMsg);
   }
 
   try {
-    const fileBuffer = readFileSync(filePath, 'utf8')
+    const fileBuffer = readFileSync(filePath, 'utf8');
     return JSON.parse(fileBuffer.toString());
   } catch (err) {
     /* eslint-disable no-console */
-    console.error(
+    logger.error(
       `Unable to parse ${filePath.replace(
-        DEFAULT_BASE_PATH,
-        ""
-      )} - JSON is most likley not valid`
+        process.cwd(),
+        '',
+      )} - JSON is most likley not valid`,
     );
     /* eslint-enable no-console */
     return {};
@@ -67,7 +68,7 @@ export function tryToJsonParse(unparsed: any): any {
  */
 function getEnvironmentSlug(): string {
   return (
-    process.env.CI_ENVIRONMENT_SLUG || process.env.CI_COMMIT_REF_SLUG || "stage"
+    process.env.CI_ENVIRONMENT_SLUG || process.env.CI_COMMIT_REF_SLUG || 'stage'
   );
 }
 
@@ -89,13 +90,13 @@ function getEnvPrefix(envName?: string): string {
  */
 function getServiceAccountPath(envName?: string): string {
   const withSuffix = join(
-    DEFAULT_BASE_PATH,
-    `serviceAccount-${envName || ''}.json`
+    process.cwd(),
+    `serviceAccount-${envName || ''}.json`,
   );
   if (existsSync(withSuffix)) {
     return withSuffix;
   }
-  return join(DEFAULT_BASE_PATH, 'serviceAccount.json');
+  return join(process.cwd(), 'serviceAccount.json');
 }
 
 /**
@@ -110,36 +111,6 @@ function getServiceAccountPath(envName?: string): string {
 export function envVarBasedOnCIEnv(varNameRoot: string, envName?: string): any {
   const prefix = getEnvPrefix(envName);
   const combined = `${prefix}${varNameRoot}`;
-  const localTestConfigPath = join(
-    DEFAULT_BASE_PATH,
-    DEFAULT_TEST_FOLDER_PATH,
-    "config.json"
-  );
-
-  // Config file used for environment (local, containers) from main test path ({integrationFolder}/config.json)
-  if (existsSync(localTestConfigPath)) {
-    const localConfigObj = readJsonFile(localTestConfigPath);
-    const valueFromLocalConfig =
-      localConfigObj[combined] || localConfigObj[varNameRoot];
-    if (valueFromLocalConfig) {
-      return valueFromLocalConfig;
-    }
-  }
-  const fallbackConfigPath = join(
-    DEFAULT_BASE_PATH,
-    FALLBACK_TEST_FOLDER_PATH,
-    "config.json"
-  );
-  // Config file used for environment from main cypress environment file (cypress.env.json)
-  if (existsSync(fallbackConfigPath)) {
-    const configObj = readJsonFile(fallbackConfigPath);
-    const valueFromCypressEnv = configObj[combined] || configObj[varNameRoot];
-    if (valueFromCypressEnv) {
-      return valueFromCypressEnv;
-    }
-  }
-
-  // CI Environment (environment variables loaded directly)
   return process.env[combined] || process.env[varNameRoot];
 }
 
@@ -159,8 +130,8 @@ function getParsedEnvVar(varNameRoot: string, envName?: string): any {
   const combinedVar = `${prefix}${varNameRoot}`;
   if (!val) {
     /* eslint-disable no-console */
-    console.error(
-      `${combinedVar} not found, make sure it is set within environment vars`
+    logger.error(
+      `${combinedVar} not found, make sure it is set within environment vars`,
     );
     /* eslint-enable no-console */
   }
@@ -171,7 +142,7 @@ function getParsedEnvVar(varNameRoot: string, envName?: string): any {
     return val;
   } catch (err) {
     /* eslint-disable no-console */
-    console.error(`Error parsing ${combinedVar}`);
+    logger.error(`Error parsing ${combinedVar}`);
     /* eslint-enable no-console */
     return val;
   }
@@ -204,15 +175,15 @@ export function getServiceAccount(envSlug?: string): ServiceAccount {
   }
 
   // Use single environment variable for service account object (CI)
-  const serviceAccountEnvVar = envVarBasedOnCIEnv("SERVICE_ACCOUNT", envSlug);
+  const serviceAccountEnvVar = envVarBasedOnCIEnv('SERVICE_ACCOUNT', envSlug);
   if (serviceAccountEnvVar) {
-    if (typeof serviceAccountEnvVar === "string") {
+    if (typeof serviceAccountEnvVar === 'string') {
       try {
         return JSON.parse(serviceAccountEnvVar);
       } catch (err) {
         /* eslint-disable no-console */
-        console.error(
-          "Issue parsing SERVICE_ACCOUNT environment variable from string to object, returning string"
+        logger.error(
+          'Issue parsing SERVICE_ACCOUNT environment variable from string to object, returning string',
         );
         /* eslint-enable no-console */
       }
@@ -220,11 +191,11 @@ export function getServiceAccount(envSlug?: string): ServiceAccount {
     return serviceAccountEnvVar;
   }
 
-  const clientId = envVarBasedOnCIEnv("FIREBASE_CLIENT_ID", envSlug);
+  const clientId = envVarBasedOnCIEnv('FIREBASE_CLIENT_ID', envSlug);
   if (clientId) {
     /* eslint-disable no-console */
-    console.error(
-      '"FIREBASE_CLIENT_ID" will override FIREBASE_TOKEN for auth when calling firebase-tools - this may cause unexepected behavior'
+    logger.error(
+      '"FIREBASE_CLIENT_ID" will override FIREBASE_TOKEN for auth when calling firebase-tools - this may cause unexepected behavior',
     );
     /* eslint-enable no-console */
   }
@@ -232,16 +203,16 @@ export function getServiceAccount(envSlug?: string): ServiceAccount {
   /* eslint-disable @typescript-eslint/camelcase */
   // Multiple environment variables to build object (CI)
   return {
-    type: "service_account",
-    project_id: envVarBasedOnCIEnv("FIREBASE_PROJECT_ID", envSlug),
-    private_key_id: envVarBasedOnCIEnv("FIREBASE_PRIVATE_KEY_ID", envSlug),
-    private_key: getParsedEnvVar("FIREBASE_PRIVATE_KEY", envSlug),
-    client_email: envVarBasedOnCIEnv("FIREBASE_CLIENT_EMAIL", envSlug),
+    type: 'service_account',
+    project_id: envVarBasedOnCIEnv('FIREBASE_PROJECT_ID', envSlug),
+    private_key_id: envVarBasedOnCIEnv('FIREBASE_PRIVATE_KEY_ID', envSlug),
+    private_key: getParsedEnvVar('FIREBASE_PRIVATE_KEY', envSlug),
+    client_email: envVarBasedOnCIEnv('FIREBASE_CLIENT_EMAIL', envSlug),
     client_id: clientId,
-    auth_uri: "https://accounts.google.com/o/oauth2/auth",
-    token_uri: "https://accounts.google.com/o/oauth2/token",
-    auth_provider_x509_cert_url: "https://www.googleapis.com/oauth2/v1/certs",
-    client_x509_cert_url: envVarBasedOnCIEnv("FIREBASE_CERT_URL", envSlug)
+    auth_uri: 'https://accounts.google.com/o/oauth2/auth',
+    token_uri: 'https://accounts.google.com/o/oauth2/token',
+    auth_provider_x509_cert_url: 'https://www.googleapis.com/oauth2/v1/certs',
+    client_x509_cert_url: envVarBasedOnCIEnv('FIREBASE_CERT_URL', envSlug),
   };
   /* eslint-enable @typescript-eslint/camelcase */
 }
@@ -252,7 +223,7 @@ export function getServiceAccount(envSlug?: string): ServiceAccount {
  * @returns Service account object
  */
 export function getServiceAccountWithoutWarning(
-  envSlug?: string
+  envSlug?: string,
 ): ServiceAccount | null {
   const serviceAccountPath = getServiceAccountPath(envSlug);
   // Check for local service account file (Local dev)
@@ -268,8 +239,8 @@ export function getServiceAccountWithoutWarning(
         return JSON.parse(serviceAccountEnvVar);
       } catch (err) {
         /* eslint-disable no-console */
-        console.warn(
-          `Issue parsing "SERVICE_ACCOUNT" environment variable from string to object, returning string`
+        logger.warn(
+          `Issue parsing "SERVICE_ACCOUNT" environment variable from string to object, returning string`,
         );
         /* eslint-enable no-console */
       }
@@ -291,76 +262,109 @@ let fbInstance: admin.app.App;
  * @returns projectId for emulated project
  */
 function getEmulatedProjectId(): string {
-  const GCLOUD_PROJECT = envVarBasedOnCIEnv("GCLOUD_PROJECT")
+  const GCLOUD_PROJECT = envVarBasedOnCIEnv('GCLOUD_PROJECT');
   if (GCLOUD_PROJECT) {
-    return GCLOUD_PROJECT
+    return GCLOUD_PROJECT;
   }
-  const FIREBASE_PROJECT = envVarBasedOnCIEnv("FIREBASE_PROJECT")
+  const FIREBASE_PROJECT = envVarBasedOnCIEnv('FIREBASE_PROJECT');
   if (FIREBASE_PROJECT) {
-    return FIREBASE_PROJECT
+    return FIREBASE_PROJECT;
   }
-  const FIREBASE_PROJECT_ID = envVarBasedOnCIEnv("FIREBASE_PROJECT_ID")
+  const FIREBASE_PROJECT_ID = envVarBasedOnCIEnv('FIREBASE_PROJECT_ID');
   if (FIREBASE_PROJECT_ID) {
-    return FIREBASE_PROJECT_ID
+    return FIREBASE_PROJECT_ID;
   }
   // Get service account from local file falling back to environment variables
   const serviceAccount = getServiceAccountWithoutWarning();
-  return serviceAccount?.project_id || 'test'
+  return serviceAccount?.project_id || 'test';
+}
+
+/**
+ * Get settings for Firestore from environment. Loads port and servicePath from
+ * FIRESTORE_EMULATOR_HOST node environment variable if found, otherwise
+ * defaults to port 8080 and servicePath "localhost".
+ * @returns Firestore settings to be passed to firebase.firestore().settings
+ */
+function firestoreSettingsFromEnv(): FirebaseFirestore.Settings {
+  const { FIRESTORE_EMULATOR_HOST } = process.env;
+  if (
+    typeof FIRESTORE_EMULATOR_HOST === 'undefined' ||
+    !isString(FIRESTORE_EMULATOR_HOST)
+  ) {
+    return {
+      servicePath: 'localhost',
+      port: 8080,
+    };
+  }
+  const [servicePath, portStr] = FIRESTORE_EMULATOR_HOST.split(':');
+  return {
+    servicePath,
+    port: parseInt(portStr, 10),
+  };
+}
+
+interface InitOptions {
+  /* Whether or not to use emulator */
+  emulator?: boolean;
 }
 
 /**
  * Initialize Firebase instance from service account (from either local
  * serviceAccount.json or environment variables)
+ *
  * @returns Initialized Firebase instance
+ * @param options
  */
-export function initializeFirebase(): admin.app.App {
+export function initializeFirebase(options?: InitOptions): admin.app.App {
   if (fbInstance) {
-    return fbInstance
+    return fbInstance;
   }
   // Use emulator if it exists in environment
-  const { FIRESTORE_EMULATOR_HOST, FIREBASE_DATABASE_EMULATOR_HOST } = process.env
-  if (FIRESTORE_EMULATOR_HOST || FIREBASE_DATABASE_EMULATOR_HOST) {
+  const {
+    FIRESTORE_EMULATOR_HOST,
+    FIREBASE_DATABASE_EMULATOR_HOST,
+  } = process.env;
+  if (
+    FIRESTORE_EMULATOR_HOST ||
+    FIREBASE_DATABASE_EMULATOR_HOST ||
+    options?.emulator
+  ) {
     try {
       // TODO: Look into using @firebase/testing in place of admin here to allow for
       // usage of clearFirestoreData (see https://github.com/prescottprue/cypress-firebase/issues/73 for more info)
-      const projectId = getEmulatedProjectId()
-  
-      const fbConfig: any = { projectId }
+      const projectId = getEmulatedProjectId();
+
+      const fbConfig: any = { projectId };
       // Initialize RTDB with databaseURL from FIREBASE_DATABASE_EMULATOR_HOST to allow for RTDB actions
       // within Emulator
-      if (FIREBASE_DATABASE_EMULATOR_HOST) {
-        fbConfig.databaseURL = `http://${FIREBASE_DATABASE_EMULATOR_HOST}?ns=${fbConfig.projectId || 'local'}`
+      if (FIREBASE_DATABASE_EMULATOR_HOST || options?.emulator) {
+        fbConfig.databaseURL = `http://${FIREBASE_DATABASE_EMULATOR_HOST ||
+          'localhost:9000'}?ns=${fbConfig.projectId || 'local'}`;
         /* eslint-disable no-console */
-        console.log('Using RTDB emulator with DB URL:', fbConfig.databaseURL);
+        logger.info('Using RTDB emulator with DB URL:', fbConfig.databaseURL);
         /* eslint-enable no-console */
       }
-      
+
       // Add service account credential if it exists so that custom auth tokens can be generated
       const serviceAccount = getServiceAccountWithoutWarning();
       if (serviceAccount) {
-        fbConfig.credential = admin.credential.cert((serviceAccount as any));
+        fbConfig.credential = admin.credential.cert(serviceAccount as any);
       }
-  
-      fbInstance = admin.initializeApp(fbConfig)
-      if (FIRESTORE_EMULATOR_HOST) {
-        const [servicePath, portStr] = FIRESTORE_EMULATOR_HOST.split(':')
-        const firestoreSettings = {
-          servicePath,
-          port: parseInt(portStr, 10)
-        }
-        /* eslint-disable no-console */
-        console.log(
+
+      fbInstance = admin.initializeApp(fbConfig);
+      if (FIRESTORE_EMULATOR_HOST || options?.emulator) {
+        const firestoreSettings = firestoreSettingsFromEnv();
+        logger.info(
           'Using Firestore emulator with settings:',
-          firestoreSettings
+          firestoreSettings,
         );
-        /* eslint-enable no-console */
-        admin.firestore().settings(firestoreSettings)
+        admin.firestore().settings(firestoreSettings);
       }
-    } catch(err) {
+    } catch (err) {
       /* eslint-disable no-console */
-      console.error(
-        "Error initializing firebase-admin instance with emulator settings.",
-        err.message
+      logger.error(
+        'Error initializing firebase-admin instance with emulator settings.',
+        err.message,
       );
       /* eslint-enable no-console */
       throw err;
@@ -369,34 +373,31 @@ export function initializeFirebase(): admin.app.App {
     try {
       // Get service account from local file falling back to environment variables
       const serviceAccount = getServiceAccount();
-      const projectId = serviceAccount && serviceAccount.project_id
+      const projectId = serviceAccount && serviceAccount.project_id;
       if (!isString(projectId)) {
         const missingProjectIdErr =
-          "Error project_id from service account to initialize Firebase.";
-        console.error(missingProjectIdErr); // eslint-disable-line no-console
+          'Error project_id from service account to initialize Firebase.';
+        logger.error(missingProjectIdErr);
         throw new Error(missingProjectIdErr);
       }
       const cleanProjectId = projectId.replace(
-        "firebase-top-agent-int",
-        "top-agent-int"
+        'firebase-top-agent-int',
+        'top-agent-int',
       );
 
       fbInstance = admin.initializeApp({
-        credential: admin.credential.cert((serviceAccount as any)),
-        databaseURL: `https://${cleanProjectId}.firebaseio.com`
+        credential: admin.credential.cert(serviceAccount as any),
+        databaseURL: `https://${cleanProjectId}.firebaseio.com`,
       });
     } catch (err) {
-      /* eslint-disable no-console */
-      console.error(
-        "Error initializing firebase-admin instance from service account.",
-        err.message
+      logger.error(
+        'Error initializing firebase-admin instance from service account.',
+        err.message,
       );
-      /* eslint-enable no-console */
       throw err;
     }
   }
   return fbInstance;
-  
 }
 
 /**
@@ -410,25 +411,41 @@ export function initializeFirebase(): admin.app.App {
 export function slashPathToFirestoreRef(
   firestoreInstance: any,
   slashPath: string,
-  options?: any
-): admin.firestore.CollectionReference | admin.firestore.DocumentReference | admin.firestore.Query {
+  options?: any,
+):
+  | admin.firestore.CollectionReference
+  | admin.firestore.DocumentReference
+  | admin.firestore.Query {
   if (!slashPath) {
-    throw new Error('Path is required to make Firestore Reference')
+    throw new Error('Path is required to make Firestore Reference');
   }
-  const isDocPath = slashPath.split('/').length % 2;
-  
- const ref = isDocPath
+  const isCollectionPath = slashPath.split('/').length % 2;
+
+  let ref = isCollectionPath
     ? firestoreInstance.collection(slashPath)
     : firestoreInstance.doc(slashPath);
 
+  // Apply orderBy to query if it exists
+  if (options?.orderBy && typeof ref.orderBy === 'function') {
+    ref = ref.orderBy(options.orderBy);
+  }
+  // Apply where to query if it exists
+  if (options?.where && typeof ref.where === 'function') {
+    ref = ref.where(...options.where);
+  }
+
   // Apply limit to query if it exists
-  if (options && options.limit && typeof ref.limit === 'function') {
-    return ref.limit(options.limit);
+  if (options?.limit && typeof ref.limit === 'function') {
+    ref = ref.limit(options.limit);
+  }
+
+  // Apply limitToLast to query if it exists
+  if (options?.limitToLast && typeof ref.limitToLast === 'function') {
+    ref = ref.limitToLast(options.limitToLast);
   }
 
   return ref;
 }
-
 
 /**
  * @param firestoreInstance - Instance of firestore from which to delete collection
@@ -436,8 +453,14 @@ export function slashPathToFirestoreRef(
  * @param resolve - Function to call to resolve
  * @param reject - Function to call to reject
  */
-function deleteQueryBatch(firestoreInstance: any, query: any, resolve: Function, reject: Function): any {
-  query.get()
+function deleteQueryBatch(
+  firestoreInstance: any,
+  query: any,
+  resolve: Function,
+  reject: Function,
+): any {
+  query
+    .get()
     .then((snapshot: any) => {
       // When there are no documents left, we are done
       if (snapshot.size === 0) {
@@ -453,7 +476,8 @@ function deleteQueryBatch(firestoreInstance: any, query: any, resolve: Function,
       return batch.commit().then(() => {
         return snapshot.size;
       });
-    }).then((numDeleted: any) => {
+    })
+    .then((numDeleted: any) => {
       if (numDeleted === 0) {
         resolve();
         return;
@@ -474,23 +498,15 @@ function deleteQueryBatch(firestoreInstance: any, query: any, resolve: Function,
  * @param batchSize - Size of batch
  * @returns Promise which resolves when collection has been deleted
  */
-export function deleteFirestoreCollection(firestoreInstance: any, collectionPath: string, batchSize?: number): Promise<any> {
+export function deleteFirestoreCollection(
+  firestoreInstance: any,
+  collectionPath: string,
+  batchSize?: number,
+): Promise<any> {
   const collectionRef = firestoreInstance.collection(collectionPath);
   const query = collectionRef.orderBy('__name__').limit(batchSize || 200);
 
   return new Promise((resolve, reject) => {
     deleteQueryBatch(firestoreInstance, query, resolve, reject);
   });
-}
-
-
-/**
- * Create command arguments string from an array of arguments by joining them
- * with a space including a leading space. If no args provided, empty string
- * is returned
- * @param args - Command arguments to convert into a string
- * @returns Arguments section of command string
- */
-export function getArgsString(args: string[]): string {
-  return args && args.length ? ` ${args.join(" ")}` : "";
 }
