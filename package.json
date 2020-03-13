@@ -1,6 +1,6 @@
 {
   "name": "firebase-tools-extra",
-  "version": "1.0.0-alpha.2",
+  "version": "1.0.0-alpha.3",
   "description": "Extra functionality for firebase-tools with support for emulators and auth through service account.",
   "main": "lib/index.js",
   "module": "lib/index.js",
@@ -21,9 +21,9 @@
     "build": "yarn build:lib && yarn build:esm && yarn build:typefile",
     "build:typefile": "tsc --declaration --outFile index.d.ts --emitDeclarationOnly",
     "build:lib": "tsc",
-    "build:esm": "tsc && tsc -m es6 --outDir lib-esm",
-    "watch": "yarn build:commonjs --watch",
-    "watch:es": "yarn build:es --watch",
+    "build:esm": "tsc -m es6 --outDir lib-esm",
+    "watch": "yarn build --watch",
+    "watch:es": "yarn build:esm --watch",
     "lint": "eslint src/**/*.ts --ext .ts",
     "lint:fix": "yarn lint --fix",
     "prepare": "yarn clean && yarn build"
@@ -34,8 +34,10 @@
     "cli"
   ],
   "dependencies": {
+    "chalk": "^3.0.0",
     "commander": "^4.1.1",
-    "firebase-admin": "^8.9.2",
+    "figures": "^3.2.0",
+    "firebase-admin": "^8.10.0",
     "lodash": "^4.17.15"
   },
   "devDependencies": {

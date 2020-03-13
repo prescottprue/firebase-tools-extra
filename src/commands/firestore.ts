@@ -3,10 +3,32 @@ import {
   slashPathToFirestoreRef,
   initializeFirebase,
   deleteFirestoreCollection,
-  readJsonFile
+  readJsonFile,
+  writeFilePromise
 } from "../utils";
+import { error } from '../logger'
 
 export type FirestoreAction = 'get' | 'set' | 'add' | 'update' | 'delete'
+
+/**
+ * Methods that are applicabale on a ref for a get action
+ */
+export interface FirestoreQueryMethods {
+  orderBy?: string
+  startAt?: any
+  startAfter?: any
+  where?: [string | FirebaseFirestore.FieldPath, FirebaseFirestore.WhereFilterOp, any]
+  limit?: number
+}
+
+/**
+ * Options for Firestore get action
+ */
+export interface FirestoreGetOptions extends FirestoreQueryMethods {
+  // shallow?: boolean
+  pretty?: boolean
+  output?: boolean
+}
 
 /**
  * Get data from Firestore at given path (works for documents & collections)
@@ -38,13 +60,21 @@ export async function firestoreGet(actionPath: string, options?: any): Promise<a
         id: docSnap.id
       }
     })
+
     // Write results to stdout
     if (dataToWrite) {
-      process.stdout.write(JSON.stringify(dataToWrite));
+      if (options?.output) {
+        // Write results to file at path provided in options.output
+        await writeFilePromise(`${process.cwd()}/${options.output}`, JSON.stringify(dataToWrite, null, 2))
+      } else {
+        // Write results to stdout
+        process.stdout.write(options?.pretty ? JSON.stringify(dataToWrite, null, 2) : JSON.stringify(dataToWrite));
+      }
     }
+
     return dataToWrite;
   } catch (err) {
-    console.error(`Error with firestore:get at path "${actionPath}": `, err.message); // eslint-disable-line no-console
+    error(`Error with firestore:get at path "${actionPath}": `, err.message);
     throw err;
   }
 }
@@ -67,7 +97,7 @@ export async function firestoreWrite(
 
   if (!filePath) {
     const errMsg = `File path or data is required to run ${action} at path "${actionPath}"`
-    console.error(errMsg) // eslint-disable-line no-console
+    error(errMsg)
     throw new Error(errMsg)
   }
   const dataToWrite = options?.data ? options.data : readJsonFile(filePath)
@@ -91,9 +121,13 @@ export async function firestoreWrite(
     // Call action with fixture data
     return (ref as any)[action](dataToWrite)
   } catch (err) {
-    console.error(`Error with ${action} at path "${actionPath}": `, err.message); // eslint-disable-line no-console
+    error(`Error with ${action} at path "${actionPath}": `, err.message);
     throw err;
   }
+}
+
+interface FirestoreDeleteOptions {
+  batchSize?: number
 }
 
 /**
@@ -104,34 +138,20 @@ export async function firestoreWrite(
  */
 export async function firestoreDelete(
   actionPath: string,
-  options?: any
+  options?: FirestoreDeleteOptions
 ): Promise<any> {
   const fbInstance = initializeFirebase();
 
-  // Create ref from slash and any provided query options
-  const ref = slashPathToFirestoreRef(
-    fbInstance.firestore(),
-    actionPath,
-    options
-  );
-
-  // Confirm ref has action as a method
-  if (!(ref as any).delete) {
-    // Delete Firestore Collection or SubCollection
-    if (actionPath.split('/').length % 2) {
-      return deleteFirestoreCollection(fbInstance.firestore(), actionPath, 200)
-    }
-
-    // Otherwise throw error for ref not containg action
-    const missingActionErr = `Ref at provided path "${actionPath}" does not have action "delete"`;
-    throw new Error(missingActionErr);
+  // Delete Firestore Collection or SubCollection
+  if (actionPath.split('/').length % 2) {
+    return deleteFirestoreCollection(fbInstance.firestore(), actionPath, options?.batchSize || 200)
   }
 
   try {
     // Call action with fixture data
-    return (ref as any).delete()
+    return fbInstance.firestore().doc(actionPath).delete()
   } catch (err) {
-    console.error(`Error with firestore:delete at path "${actionPath}": `, err.message); // eslint-disable-line no-console
+    error(`Error with firestore:delete at path "${actionPath}": `, err.message);
     throw err;
   }
 }

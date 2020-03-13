@@ -1,3 +1,4 @@
+/// <reference types="node" />
 declare module "constants" {
     export const DEFAULT_TEST_FOLDER_PATH = "test/e2e";
     export const FALLBACK_TEST_FOLDER_PATH = "cypress";
@@ -5,7 +6,9 @@ declare module "constants" {
 }
 declare module "utils" {
     import * as admin from "firebase-admin";
+    import { writeFile } from "fs";
     export const DEFAULT_BASE_PATH: string;
+    export const writeFilePromise: typeof writeFile.__promisify__;
     /**
      * Check whether a value is a string or not
      * @param valToCheck - Value to check
@@ -89,8 +92,59 @@ declare module "utils" {
      */
     export function getArgsString(args: string[]): string;
 }
+declare module "logger" {
+    export const log: {
+        (message?: any, ...optionalParams: any[]): void;
+        (message?: any, ...optionalParams: any[]): void;
+    };
+    /**
+     * Log info within console
+     * @param message - Message containing info to log
+     * @param other - Other values to pass to info
+     * @returns undefined
+     */
+    export function info(message: string, other?: any): void;
+    /**
+     * Log a success within console (colorized with green)
+     * @param message - Success message to log
+     * @param other - Other values to pass to info
+     * @returns undefined
+     */
+    export function success(message: string, other?: any): void;
+    /**
+     * Log a warning within the console (colorized with yellow)
+     * @param message - Warning message to log
+     * @param other - Other values to pass to info
+     * @returns undefined
+     */
+    export function warn(message: string, other?: any): void;
+    /**
+     * Log an error within console (colorized with red)
+     * @param message - Error message to log
+     * @param other - Other values to pass to info
+     * @returns undefined
+     */
+    export function error(message: string, other?: any): void;
+}
 declare module "commands/firestore" {
     export type FirestoreAction = 'get' | 'set' | 'add' | 'update' | 'delete';
+    /**
+     * Methods that are applicabale on a ref for a get action
+     */
+    export interface FirestoreQueryMethods {
+        orderBy?: string;
+        startAt?: any;
+        startAfter?: any;
+        where?: [string | FirebaseFirestore.FieldPath, FirebaseFirestore.WhereFilterOp, any];
+        limit?: number;
+    }
+    /**
+     * Options for Firestore get action
+     */
+    export interface FirestoreGetOptions extends FirestoreQueryMethods {
+        pretty?: boolean;
+        output?: boolean;
+    }
     /**
      * Get data from Firestore at given path (works for documents & collections)
      * @param actionPath - Path where to run firestore get
@@ -107,21 +161,23 @@ declare module "commands/firestore" {
      * @returns Results of running action within Firestore
      */
     export function firestoreWrite(action: "add" | "update" | "get" | "set" | "delete" | undefined, actionPath: string, filePath?: string, options?: any): Promise<any>;
+    interface FirestoreDeleteOptions {
+        batchSize?: number;
+    }
     /**
      * Delete data from Firestore
      * @param actionPath - Path at which Firestore action should be run
      * @param options - Options object
      * @returns Action within Firestore
      */
-    export function firestoreDelete(actionPath: string, options?: any): Promise<any>;
+    export function firestoreDelete(actionPath: string, options?: FirestoreDeleteOptions): Promise<any>;
 }
 declare module "commands/rtdb" {
     export type RTDBWriteAction = 'set' | 'push' | 'update';
     /**
      * Methods that are applicabale on a ref for a get action
      */
-    export interface RTDBGetMethods {
-        shallow?: boolean;
+    export interface RTDBQueryMethods {
         orderBy?: string;
         orderByKey?: string;
         orderByValue?: string;
@@ -134,9 +190,10 @@ declare module "commands/rtdb" {
     /**
      * Options for RTDB get action
      */
-    export interface RTDBGetOptions extends RTDBGetMethods {
+    export interface RTDBGetOptions extends RTDBQueryMethods {
         shallow?: boolean;
         pretty?: boolean;
+        output?: boolean;
     }
     /**
      * Write data to path of Real Time Database

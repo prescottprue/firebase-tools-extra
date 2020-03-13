@@ -1,9 +1,12 @@
 import * as admin from "firebase-admin";
 import { join } from "path";
-import { existsSync, readFileSync } from "fs";
+import { existsSync, readFileSync, writeFile } from "fs";
+import { promisify } from 'util'
 import { DEFAULT_TEST_FOLDER_PATH, FALLBACK_TEST_FOLDER_PATH } from "./constants";
 
 export const DEFAULT_BASE_PATH = process.cwd();
+
+export const writeFilePromise = promisify(writeFile)
 
 /**
  * Check whether a value is a string or not
@@ -417,13 +420,27 @@ export function slashPathToFirestoreRef(
   }
   const isDocPath = slashPath.split('/').length % 2;
   
- const ref = isDocPath
+ let ref = isDocPath
     ? firestoreInstance.collection(slashPath)
     : firestoreInstance.doc(slashPath);
 
+  // Apply orderBy to query if it exists
+  if (options?.orderBy && typeof ref.orderBy === 'function') {
+    ref = ref.orderBy(options.orderBy);
+  }
+  // Apply where to query if it exists
+  if (options?.where && typeof ref.where === 'function') {
+    ref = ref.where(...options.where);
+  }
+
   // Apply limit to query if it exists
-  if (options && options.limit && typeof ref.limit === 'function') {
-    return ref.limit(options.limit);
+  if (options?.limit && typeof ref.limit === 'function') {
+    ref = ref.limit(options.limit);
+  }
+
+  // Apply limitToLast to query if it exists
+  if (options?.limitToLast && typeof ref.limitToLast === 'function') {
+    ref = ref.limitToLast(options.limitToLast);
   }
 
   return ref;
