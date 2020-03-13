@@ -1,6 +1,10 @@
-import { firestoreGet, firestoreWrite, firestoreDelete } from './commands/firestore';
-import { rtdbGet, rtdbWrite, rtdbRemove } from './commands/rtdb';
-import createCustomToken from './commands/createCustomToken';
+import {
+  firestoreGet,
+  firestoreWrite,
+  firestoreDelete,
+} from './actions/firestore';
+import { rtdbGet, rtdbWrite, rtdbRemove } from './actions/rtdb';
+import createCustomToken from './actions/createCustomToken';
 
 export {
   firestoreGet,
@@ -9,5 +13,5 @@ export {
   rtdbGet,
   rtdbWrite,
   rtdbRemove,
-  createCustomToken
-}
+  createCustomToken,
+};

@@ -3,11 +3,11 @@ module.exports = {
   parserPreset: {
     parserOpts: {
       issuePrefixes: ['#'],
-      referenceActions: ['closes', 'fixes']
-    }
+      referenceActions: ['closes', 'fixes'],
+    },
   },
   rules: {
     // 'references-empty': [2, 'never'],
     // 'scope-enum': [2, 'always', ['all', 'hello', 'world']],
-  }
+  },
 };

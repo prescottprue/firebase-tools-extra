@@ -20,6 +20,7 @@ module.exports = function firestoreDeleteCommand(program) {
     //   '-r, --recursive',
     //   'Recursive. Delete all documents and subcollections. Any action which would result in the deletion of child documents will fail if this argument is not passed. May not be passed along with --shallow.'
     // )
+    .option('--emulator', 'use Firestore emulator')
     .action((dbPath, options) => {
       return firestoreDelete(dbPath, options)
         .then(() => process.exit(0))

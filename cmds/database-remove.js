@@ -10,6 +10,7 @@ module.exports = function databaseRemoveCommand(program) {
   program
     .command('database:delete [path]')
     .description('delete data from database emulator')
+    .option('--emulator', 'use RTDB emulator')
     .action((opts, dbPath) => {
       return rtdbRemove(dbPath, opts)
         .then(() => process.exit(0))

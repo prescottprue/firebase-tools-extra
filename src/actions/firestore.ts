@@ -1,24 +1,29 @@
-import * as admin from 'firebase-admin'
+import * as admin from 'firebase-admin';
 import {
   slashPathToFirestoreRef,
   initializeFirebase,
   deleteFirestoreCollection,
   readJsonFile,
-  writeFilePromise
-} from "../utils";
-import { error } from '../logger'
+  writeFilePromise,
+  tryToJsonParse,
+} from '../utils';
+import { error } from '../logger';
 
-export type FirestoreAction = 'get' | 'set' | 'add' | 'update' | 'delete'
+export type FirestoreAction = 'get' | 'set' | 'add' | 'update' | 'delete';
 
 /**
  * Methods that are applicabale on a ref for a get action
  */
 export interface FirestoreQueryMethods {
-  orderBy?: string
-  startAt?: any
-  startAfter?: any
-  where?: [string | FirebaseFirestore.FieldPath, FirebaseFirestore.WhereFilterOp, any]
-  limit?: number
+  orderBy?: string;
+  startAt?: any;
+  startAfter?: any;
+  where?: [
+    string | FirebaseFirestore.FieldPath,
+    FirebaseFirestore.WhereFilterOp,
+    any,
+  ];
+  limit?: number;
 }
 
 /**
@@ -26,8 +31,9 @@ export interface FirestoreQueryMethods {
  */
 export interface FirestoreGetOptions extends FirestoreQueryMethods {
   // shallow?: boolean
-  pretty?: boolean
-  output?: boolean
+  pretty?: boolean;
+  output?: boolean;
+  emulator?: boolean;
 }
 
 /**
@@ -36,39 +42,51 @@ export interface FirestoreGetOptions extends FirestoreQueryMethods {
  * @param options - Options object
  * @returns Data value that results from running get within Firestore
  */
-export async function firestoreGet(actionPath: string, options?: any): Promise<any> {
-  const fbInstance = initializeFirebase();
+export async function firestoreGet(
+  actionPath: string,
+  options?: any,
+): Promise<any> {
+  const fbInstance = initializeFirebase({ emulator: options?.emulator });
 
   // Create ref from slash and any provided query options
   const ref = slashPathToFirestoreRef(
     fbInstance.firestore(),
     actionPath,
-    options
+    options,
   );
 
   try {
     // Call action with fixture data
-    const res: any = await ref.get()
+    const res: any = await ref.get();
 
     // Parse results for get action
     // Include id in doc if collection query
-    const dataToWrite = typeof res.data === 'function'
-    ? res.data()
-    : res.docs && res.docs.map((docSnap: admin.firestore.DocumentSnapshot) => {
-      return {
-        ...docSnap.data(),
-        id: docSnap.id
-      }
-    })
+    const dataToWrite =
+      typeof res.data === 'function'
+        ? res.data()
+        : res.docs &&
+          res.docs.map((docSnap: admin.firestore.DocumentSnapshot) => {
+            return {
+              ...docSnap.data(),
+              id: docSnap.id,
+            };
+          });
 
     // Write results to stdout
     if (dataToWrite) {
       if (options?.output) {
         // Write results to file at path provided in options.output
-        await writeFilePromise(`${process.cwd()}/${options.output}`, JSON.stringify(dataToWrite, null, 2))
+        await writeFilePromise(
+          `${process.cwd()}/${options.output}`,
+          JSON.stringify(dataToWrite, null, 2),
+        );
       } else {
         // Write results to stdout
-        process.stdout.write(options?.pretty ? JSON.stringify(dataToWrite, null, 2) : JSON.stringify(dataToWrite));
+        process.stdout.write(
+          options?.pretty
+            ? JSON.stringify(dataToWrite, null, 2)
+            : JSON.stringify(dataToWrite),
+        );
       }
     }
 
@@ -88,25 +106,27 @@ export async function firestoreGet(actionPath: string, options?: any): Promise<a
  * @returns Results of running action within Firestore
  */
 export async function firestoreWrite(
-  action: FirestoreAction = "set",
+  action: FirestoreAction = 'set',
   actionPath: string,
   filePath?: string,
-  options?: any
+  options?: any,
 ): Promise<any> {
-  const fbInstance = initializeFirebase();
+  const fbInstance = initializeFirebase({ emulator: options?.emulator });
 
-  if (!filePath) {
-    const errMsg = `File path or data is required to run ${action} at path "${actionPath}"`
-    error(errMsg)
-    throw new Error(errMsg)
+  if (!filePath && !options?.data) {
+    const errMsg = `File path or data is required to run ${action} at path "${actionPath}"`;
+    error(errMsg);
+    throw new Error(errMsg);
   }
-  const dataToWrite = options?.data ? options.data : readJsonFile(filePath)
+  const dataToWrite = options?.data
+    ? tryToJsonParse(options.data)
+    : readJsonFile(filePath as string);
 
   // Create ref from slash and any provided query options
   const ref = slashPathToFirestoreRef(
     fbInstance.firestore(),
     actionPath,
-    options
+    options,
   );
   // TODO: Support passing timestamps
 
@@ -119,7 +139,8 @@ export async function firestoreWrite(
 
   try {
     // Call action with fixture data
-    return (ref as any)[action](dataToWrite)
+    const res = await (ref as any)[action](dataToWrite);
+    return res;
   } catch (err) {
     error(`Error with ${action} at path "${actionPath}": `, err.message);
     throw err;
@@ -127,7 +148,8 @@ export async function firestoreWrite(
 }
 
 interface FirestoreDeleteOptions {
-  batchSize?: number
+  batchSize?: number;
+  emulator?: boolean;
 }
 
 /**
@@ -138,20 +160,27 @@ interface FirestoreDeleteOptions {
  */
 export async function firestoreDelete(
   actionPath: string,
-  options?: FirestoreDeleteOptions
+  options?: FirestoreDeleteOptions,
 ): Promise<any> {
-  const fbInstance = initializeFirebase();
+  const fbInstance = initializeFirebase({ emulator: options?.emulator });
 
   // Delete Firestore Collection or SubCollection
   if (actionPath.split('/').length % 2) {
-    return deleteFirestoreCollection(fbInstance.firestore(), actionPath, options?.batchSize || 200)
+    return deleteFirestoreCollection(
+      fbInstance.firestore(),
+      actionPath,
+      options?.batchSize || 200,
+    );
   }
-
   try {
     // Call action with fixture data
-    return fbInstance.firestore().doc(actionPath).delete()
+    const res = await fbInstance
+      .firestore()
+      .doc(actionPath)
+      .delete();
+    return res;
   } catch (err) {
-    error(`Error with firestore:delete at path "${actionPath}": `, err.message);
+    error(`firestore:delete at path "${actionPath}": `, err.message);
     throw err;
   }
 }

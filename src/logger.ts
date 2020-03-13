@@ -4,19 +4,19 @@ import fig from 'figures';
 const colorMapping = {
   warn: 'yellow',
   success: 'green',
-  error: 'red'
+  error: 'red',
 };
 
 const iconMapping = {
   info: 'ℹ',
   warn: '⚠',
   success: '✔',
-  error: '✖'
+  error: '✖',
 };
 
 const prefixMapping = {
   warn: 'Warning: ',
-  error: 'Error: '
+  error: 'Error: ',
 };
 
 type LogType = 'success' | 'error' | 'warn' | 'info';
@@ -44,16 +44,17 @@ function logType(type: LogType, message: string, other?: any): void {
   const icon: any = iconMapping[type];
   const prefix: any = (prefixMapping as any)[type];
   const colorLog = colorLogger(type);
-  /* eslint-disable no-console */
-  console.log(
+  const args = [
     `${icon ? colorLog(fig(icon)) : ''} ${
       prefix ? colorLog(prefix) : ''
-    }${message}`
-  );
-  /* eslint-enable no-console */
+    }${message}`,
+  ];
   if (other) {
-    console.log('\n', other); // eslint-disable-line no-console
+    args.push(other);
   }
+  /* eslint-disable no-console */
+  console.log(...args);
+  /* eslint-enable no-console */
 }
 
 export const log = console.log; // eslint-disable-line
