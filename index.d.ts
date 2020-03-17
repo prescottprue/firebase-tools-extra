@@ -91,6 +91,7 @@ declare module "utils" {
     export function getServiceAccountWithoutWarning(envSlug?: string): ServiceAccount | null;
     interface InitOptions {
         emulator?: boolean;
+        debug?: boolean;
     }
     /**
      * Initialize Firebase instance from service account (from either local
@@ -152,7 +153,7 @@ declare module "actions/firestore" {
      * @param options - Options object
      * @returns Results of running action within Firestore
      */
-    export function firestoreWrite(action: "add" | "update" | "delete" | "get" | "set" | undefined, actionPath: string, filePath?: string, options?: any): Promise<any>;
+    export function firestoreWrite(action: "add" | "update" | "get" | "set" | "delete" | undefined, actionPath: string, filePath?: string, options?: any): Promise<any>;
     interface FirestoreDeleteOptions {
         batchSize?: number;
         emulator?: boolean;
@@ -187,6 +188,7 @@ declare module "actions/rtdb" {
         shallow?: boolean;
         pretty?: boolean;
         output?: boolean;
+        emulator?: boolean;
     }
     /**
      * Write data to path of Real Time Database
@@ -205,19 +207,101 @@ declare module "actions/rtdb" {
     /**
      * Remove data from path of Real Time Database
      * @param actionPath - Path to remove from database
+     * @param options - Options
      */
-    export function rtdbRemove(actionPath: string): Promise<void>;
-}
-declare module "actions/createCustomToken" {
-    /**
-     * @param uid - User's UID
-     * @param envName - Name of the environment
-     */
-    export default function createCustomToken(uid: string, envName?: string): Promise<string>;
+    export function rtdbRemove(actionPath: string, options?: any): Promise<void>;
 }
 declare module "index" {
-    import { firestoreGet, firestoreWrite, firestoreDelete } from "actions/firestore";
-    import { rtdbGet, rtdbWrite, rtdbRemove } from "actions/rtdb";
-    import createCustomToken from "actions/createCustomToken";
-    export { firestoreGet, firestoreWrite, firestoreDelete, rtdbGet, rtdbWrite, rtdbRemove, createCustomToken, };
+    export * from "actions/firestore";
+    export * from "actions/rtdb";
+}
+declare module "commands/database-get" {
+    import { Command } from 'commander';
+    /**
+     * @name databaseGet
+     * fetch and print JSON data at the specified path from database emulator
+     * @param {object} program - Commander program
+     */
+    export default function databaseGetCommand(program: Command): void;
+}
+declare module "commands/database-push" {
+    import { Command } from 'commander';
+    /**
+     * @name databasePush
+     * Add a new JSON object to a list of data in your Firebase
+     * @param program - Commander program
+     */
+    export default function databasePushCommand(program: Command): void;
+}
+declare module "commands/database-remove" {
+    import { Command } from 'commander';
+    /**
+     * @name databasePush
+     * Add a new JSON object to a list of data in your Firebase
+     * @param program - Commander program
+     */
+    export default function databasePushCommand(program: Command): void;
+}
+declare module "commands/database-set" {
+    import { Command } from 'commander';
+    /**
+     * @name databaseSet
+     * store JSON data at the specified path
+     * @param program - Commander program
+     */
+    export default function databaseSetCommand(program: Command): void;
+}
+declare module "commands/database-update" {
+    import { Command } from 'commander';
+    /**
+     * @name databaseUpdate
+     * fetch and print JSON data at the specified path from database emulator
+     * @param program - Commander program
+     */
+    export default function databaseUpdateCommand(program: Command): void;
+}
+declare module "commands/firestore-add" {
+    import { Command } from 'commander';
+    /**
+     * @name firestoreAdd
+     * Add data to specified collection or sub-collection of Firestore. Work for both hosted and emulated environments
+     * @param {object} program - Commander program
+     */
+    export default function firestoreAddCommand(program: Command): void;
+}
+declare module "commands/firestore-delete" {
+    import { Command } from 'commander';
+    /**
+     * @name firestoreDelete
+     * Delete data from Cloud Firestore. Works for both hosted and emulated environments
+     * @param {object} program - Commander program
+     */
+    export default function firestoreDeleteCommand(program: Command): void;
+}
+declare module "commands/firestore-get" {
+    import { Command } from 'commander';
+    /**
+     * @name firestoreGet
+     * fetch and print JSON data at the specified path of Firestore. Works for both hosted and emulated environments
+     * @param {object} program - Commander program
+     */
+    export default function firestoreGetCommand(program: Command): void;
+}
+declare module "commands/firestore-set" {
+    import { Command } from 'commander';
+    /**
+     * @name firestoreSet
+     * set data to specified path of Firestore. Work for both hosted and emulated environments
+     * @param {object} program - Commander program
+     */
+    export default function firestoreSetCommand(program: Command): void;
+}
+declare module "commands/firestore-update" {
+    import { Command } from 'commander';
+    /**
+     * @name firestoreUpdate
+     * update data at specified path of Firestore. Work for both hosted and emulated environments
+     * @param {object} program - Commander program
+     */
+    export default function firestoreUpdateCommand(program: Command): void;
 }

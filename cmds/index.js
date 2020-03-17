@@ -8,10 +8,9 @@ module.exports = function setupCommands(client) {
    * @returns {object} Command object
    */
   function loadCommand(name) {
-    return require('./' + name)(client) // eslint-disable-line
+    return require('../lib/commands/' + name).default(client) // eslint-disable-line
   }
 
-  client.createCustomToken = loadCommand('createCustomToken');
   client.databaseGet = loadCommand('database-get');
   client.databasePush = loadCommand('database-push');
   client.databaseRemove = loadCommand('database-remove');
@@ -19,6 +18,7 @@ module.exports = function setupCommands(client) {
   client.databaseUpdate = loadCommand('database-update');
   client.firestoreDelete = loadCommand('firestore-delete');
   client.firestoreGet = loadCommand('firestore-get');
+  client.firestoreAdd = loadCommand('firestore-add');
   client.firestoreSet = loadCommand('firestore-set');
   client.firestoreUpdate = loadCommand('firestore-update');
 

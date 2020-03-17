@@ -306,6 +306,7 @@ function firestoreSettingsFromEnv(): FirebaseFirestore.Settings {
 interface InitOptions {
   /* Whether or not to use emulator */
   emulator?: boolean;
+  debug?: boolean;
 }
 
 /**
@@ -339,10 +340,10 @@ export function initializeFirebase(options?: InitOptions): admin.app.App {
       // within Emulator
       if (FIREBASE_DATABASE_EMULATOR_HOST || options?.emulator) {
         fbConfig.databaseURL = `http://${FIREBASE_DATABASE_EMULATOR_HOST ||
-          'localhost:9000'}?ns=${fbConfig.projectId || 'local'}`;
-        /* eslint-disable no-console */
-        logger.info('Using RTDB emulator with DB URL:', fbConfig.databaseURL);
-        /* eslint-enable no-console */
+          'localhost:9000'}?ns=${projectId || 'local'}`;
+        if (options?.debug) {
+          logger.info('Using RTDB emulator with DB URL:', fbConfig.databaseURL);
+        }
       }
 
       // Add service account credential if it exists so that custom auth tokens can be generated
@@ -354,10 +355,12 @@ export function initializeFirebase(options?: InitOptions): admin.app.App {
       fbInstance = admin.initializeApp(fbConfig);
       if (FIRESTORE_EMULATOR_HOST || options?.emulator) {
         const firestoreSettings = firestoreSettingsFromEnv();
-        logger.info(
-          'Using Firestore emulator with settings:',
-          firestoreSettings,
-        );
+        if (options?.debug) {
+          logger.info(
+            'Using Firestore emulator with settings:',
+            firestoreSettings,
+          );
+        }
         admin.firestore().settings(firestoreSettings);
       }
     } catch (err) {
