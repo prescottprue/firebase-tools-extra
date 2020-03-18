@@ -21,7 +21,9 @@ npm i --save-dev firebase-tools-extra
 
 To use with emulators:
 
-1. Set `FIREBASE_DATABASE_EMULATOR_HOST` and `FIRESTORE_EMULATOR_HOST` variabes to your environment
+1. Do one of the following:
+   - Pass the `--emulator` flag along with your command
+   - Set `FIREBASE_DATABASE_EMULATOR_HOST` and `FIRESTORE_EMULATOR_HOST` variabes to your environment
 1. Use firebase-tools-extra the same way you would firebase-tools: `firebase-extra database:get /users`
 
 ## Usage
@@ -50,8 +52,8 @@ Tests are currently not set up since they were causing timeouts when trying to s
 
 firebase-tools does not have the following:
 
-- support for emulators ([feature request here](https://github.com/firebase/firebase-tools/issues/1957))
-- full Firestore interactions including `get`, `set`, and `update`
+- support for emulators ([feature request to add this to `firebase-tools`](https://github.com/firebase/firebase-tools/issues/1957))
+- full Firestore interactions including `get`, `add`, `set`, and `update`
 
 ## License
 

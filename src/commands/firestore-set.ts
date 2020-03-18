@@ -1,16 +1,16 @@
-/* eslint-disable @typescript-eslint/no-var-requires */
-const { firestoreWrite } = require('../lib/commands/firestore');
+import { Command } from 'commander';
+import { firestoreWrite } from '../actions/firestore';
 
 /**
  * @name firestoreSet
  * set data to specified path of Firestore. Work for both hosted and emulated environments
- * @param {string} program - Commander program
+ * @param {object} program - Commander program
  */
-module.exports = function firestoreSetCommand(program) {
+export default function firestoreSetCommand(program: Command): void {
   program
     .command('firestore:set <path> [infile]')
     .description(
-      'set data to specified path of Firestore. Work for both hosted and emulated environments'
+      'set data to specified path of Firestore. Work for both hosted and emulated environments',
     )
     .option('-d, --data <data>', 'specify escaped JSON directly')
     .option('--emulator', 'use Firestore emulator')
@@ -19,4 +19,4 @@ module.exports = function firestoreSetCommand(program) {
         .then(() => process.exit(0))
         .catch(() => process.exit(1));
     });
-};
+}

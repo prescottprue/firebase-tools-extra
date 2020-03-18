@@ -81,12 +81,14 @@ export async function firestoreGet(
           JSON.stringify(dataToWrite, null, 2),
         );
       } else {
-        // Write results to stdout
-        process.stdout.write(
+        // Write results to stdout (console.log was used instead of process.stdout.write so that newline is appended)
+        /* eslint-disable no-console */
+        console.log(
           options?.pretty
             ? JSON.stringify(dataToWrite, null, 2)
             : JSON.stringify(dataToWrite),
         );
+        /* eslint-enable no-console */
       }
     }
 

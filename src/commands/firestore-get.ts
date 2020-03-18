@@ -1,16 +1,16 @@
-/* eslint-disable @typescript-eslint/no-var-requires */
-const { firestoreGet } = require('../lib/commands/firestore');
+import { Command } from 'commander';
+import { firestoreGet } from '../actions/firestore';
 
 /**
  * @name firestoreGet
  * fetch and print JSON data at the specified path of Firestore. Works for both hosted and emulated environments
- * @param {string} program - Commander program
+ * @param {object} program - Commander program
  */
-module.exports = function firestoreGetCommand(program) {
+export default function firestoreGetCommand(program: Command): void {
   program
-    .command('firestore:get [path]')
+    .command('firestore:get <path>')
     .description(
-      'fetch and print JSON data at the specified path of Firestore. Works for both hosted and emulated environments'
+      'fetch and print JSON data at the specified path of Firestore. Works for both hosted and emulated environments',
     )
     .option('-o, --output <filename>', 'save output to the specified file')
     .option('--emulator', 'use Firestore emulator')
@@ -19,4 +19,4 @@ module.exports = function firestoreGetCommand(program) {
         .then(() => process.exit(0))
         .catch(() => process.exit(1));
     });
-};
+}

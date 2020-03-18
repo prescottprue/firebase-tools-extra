@@ -30,6 +30,7 @@ export interface RTDBGetOptions extends RTDBQueryMethods {
   shallow?: boolean;
   pretty?: boolean;
   output?: boolean;
+  emulator?: boolean;
 }
 
 /**
@@ -75,7 +76,7 @@ export async function rtdbGet(
   actionPath: string,
   options?: RTDBGetOptions,
 ): Promise<any> {
-  const fbInstance = initializeFirebase();
+  const fbInstance = initializeFirebase({ emulator: options?.emulator });
 
   try {
     const baseRef: admin.database.Reference = fbInstance
@@ -95,12 +96,14 @@ export async function rtdbGet(
           JSON.stringify(dataToWrite, null, 2),
         );
       } else {
-        // Write results to stdout
-        process.stdout.write(
+        // Write results to stdout (console.log was used instead of process.stdout.write so that newline is appended)
+        /* eslint-disable no-console */
+        console.log(
           options?.pretty
             ? JSON.stringify(dataToWrite, null, 2)
             : JSON.stringify(dataToWrite),
         );
+        /* eslint-enable no-console */
       }
     }
   } catch (err) {
@@ -122,7 +125,7 @@ export async function rtdbWrite(
   filePath?: string,
   options?: any,
 ): Promise<any> {
-  const fbInstance = initializeFirebase();
+  const fbInstance = initializeFirebase({ emulator: options?.emulator });
   if (!filePath && !options?.data) {
     const errMsg = `File path or data is required to run ${action} at path "${actionPath}"`;
     error(errMsg);
@@ -151,9 +154,13 @@ export async function rtdbWrite(
 /**
  * Remove data from path of Real Time Database
  * @param actionPath - Path to remove from database
+ * @param options - Options
  */
-export async function rtdbRemove(actionPath: string): Promise<void> {
-  const fbInstance = initializeFirebase();
+export async function rtdbRemove(
+  actionPath: string,
+  options?: any,
+): Promise<void> {
+  const fbInstance = initializeFirebase({ emulator: options?.emulator });
 
   try {
     return fbInstance

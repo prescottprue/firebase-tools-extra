@@ -1,12 +1,12 @@
-/* eslint-disable @typescript-eslint/no-var-requires */
-const { rtdbWrite } = require('../lib/commands/rtdb');
+import { Command } from 'commander';
+import { rtdbWrite } from '../actions/rtdb';
 
 /**
  * @name databaseSet
  * store JSON data at the specified path
- * @param {string} program - Commander program
+ * @param program - Commander program
  */
-module.exports = function databaseSetCommand(program) {
+export default function databaseSetCommand(program: Command): void {
   program
     .command('database:set <path> [infile]')
     .description('store JSON data at the specified path')
@@ -17,4 +17,4 @@ module.exports = function databaseSetCommand(program) {
         .then(() => process.exit(0))
         .catch(() => process.exit(1));
     });
-};
+}

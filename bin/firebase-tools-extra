@@ -8,9 +8,7 @@ require('../cmds')(program); // eslint-disable-line @typescript-eslint/no-var-re
 
 program.on('*', name => {
   /* eslint-disable no-console */
-  console.log(
-    `'${name}' is not a known command. See 'firebase-tools-extra --help':`
-  );
+  console.log(`'${name}' is not a known command. See 'firebase-extra --help':`);
   /* eslint-enable no-console */
   program.outputHelp();
   process.exit(1);
@@ -19,7 +17,7 @@ program.on('*', name => {
 program.parse(process.argv);
 
 if (program.rawArgs.length < 3) {
-  console.log("No command specified. See 'firebase-tools-extra --help':"); // eslint-disable-line no-console
+  console.log("No command specified. See 'firebase-extra --help':"); // eslint-disable-line no-console
   program.outputHelp();
   process.exit(1);
 }
