@@ -21,7 +21,9 @@ npm i --save-dev firebase-tools-extra
 
 To use with emulators:
 
-1. Pass the `--emulator` flag along with your command or set `FIREBASE_DATABASE_EMULATOR_HOST` and `FIRESTORE_EMULATOR_HOST` variabes to your environment or
+1. Do one of the following:
+   - Pass the `--emulator` flag along with your command
+   - Set `FIREBASE_DATABASE_EMULATOR_HOST` and `FIRESTORE_EMULATOR_HOST` variabes to your environment
 1. Use firebase-tools-extra the same way you would firebase-tools: `firebase-extra database:get /users`
 
 ## Usage
