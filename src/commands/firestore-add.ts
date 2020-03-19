@@ -8,7 +8,7 @@ import { firestoreWrite } from '../actions/firestore';
  */
 export default function firestoreAddCommand(program: Command): void {
   program
-    .command('firestore:set <path> [infile]')
+    .command('firestore:add <path> [infile]')
     .description(
       'Add data to specified collection or sub-collection of Firestore. Work for both hosted and emulated environments',
     )
