@@ -14,8 +14,9 @@ export default function firestoreGetCommand(program: Command): void {
     )
     .option('-o, --output <filename>', 'save output to the specified file')
     .option('--emulator', 'use Firestore emulator')
-    .action((dbPath, opts) => {
-      return firestoreGet(dbPath, opts)
+    .option('--debug', 'print verbose debug output to console')
+    .action((dbPath: string, options?: any) => {
+      return firestoreGet(dbPath, options)
         .then(() => process.exit(0))
         .catch(() => process.exit(1));
     });

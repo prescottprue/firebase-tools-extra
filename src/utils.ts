@@ -321,13 +321,9 @@ export function initializeFirebase(options?: InitOptions): admin.app.App {
     return fbInstance;
   }
   // Use emulator if it exists in environment
-  const {
-    FIRESTORE_EMULATOR_HOST,
-    FIREBASE_DATABASE_EMULATOR_HOST,
-  } = process.env;
   if (
-    FIRESTORE_EMULATOR_HOST ||
-    FIREBASE_DATABASE_EMULATOR_HOST ||
+    process.env.FIRESTORE_EMULATOR_HOST ||
+    process.env.FIREBASE_DATABASE_EMULATOR_HOST ||
     options?.emulator
   ) {
     try {
@@ -338,9 +334,18 @@ export function initializeFirebase(options?: InitOptions): admin.app.App {
       const fbConfig: any = { projectId };
       // Initialize RTDB with databaseURL from FIREBASE_DATABASE_EMULATOR_HOST to allow for RTDB actions
       // within Emulator
-      if (FIREBASE_DATABASE_EMULATOR_HOST || options?.emulator) {
-        fbConfig.databaseURL = `http://${FIREBASE_DATABASE_EMULATOR_HOST ||
-          'localhost:9000'}?ns=${projectId || 'local'}`;
+      if (process.env.FIREBASE_DATABASE_EMULATOR_HOST || options?.emulator) {
+        // Set default database emulator host if none is set (so it is picked up by firebase-admin)
+        if (!process.env.FIREBASE_DATABASE_EMULATOR_HOST) {
+          process.env.FIREBASE_DATABASE_EMULATOR_HOST = 'localhost:9000';
+        }
+
+        // TODO: Check into if namespace is required or if it should be optional
+        fbConfig.databaseURL = `http://${
+          process.env.FIREBASE_DATABASE_EMULATOR_HOST
+        }?ns=${projectId || 'local'}`;
+
+        // Log setting if debug option enabled
         if (options?.debug) {
           logger.info('Using RTDB emulator with DB URL:', fbConfig.databaseURL);
         }
@@ -353,8 +358,14 @@ export function initializeFirebase(options?: InitOptions): admin.app.App {
       }
 
       fbInstance = admin.initializeApp(fbConfig);
-      if (FIRESTORE_EMULATOR_HOST || options?.emulator) {
+      if (process.env.FIRESTORE_EMULATOR_HOST || options?.emulator) {
         const firestoreSettings = firestoreSettingsFromEnv();
+        // Set default Firestore emulator host if none is set (so it is picked up by firebase-admin)
+        if (!process.env.FIRESTORE_EMULATOR_HOST) {
+          process.env.FIRESTORE_EMULATOR_HOST = `${firestoreSettings.servicePath}:${firestoreSettings.port}`;
+        }
+
+        // Log setting if debug option enabled
         if (options?.debug) {
           logger.info(
             'Using Firestore emulator with settings:',
@@ -404,6 +415,15 @@ export function initializeFirebase(options?: InitOptions): admin.app.App {
 }
 
 /**
+ * Check with or not a slash path is the path of a document
+ * @param slashPath - Path to check for whether or not it is a doc
+ * @returns Whether or not slash path is a document path
+ */
+export function isDocPath(slashPath: string): boolean {
+  return !(slashPath.replace(/^\/|\/$/g, '').split('/').length % 2);
+}
+
+/**
  * Convert slash path to Firestore reference
  * @param firestoreInstance - Instance on which to
  * create ref
@@ -422,11 +442,10 @@ export function slashPathToFirestoreRef(
   if (!slashPath) {
     throw new Error('Path is required to make Firestore Reference');
   }
-  const isCollectionPath = slashPath.split('/').length % 2;
 
-  let ref = isCollectionPath
-    ? firestoreInstance.collection(slashPath)
-    : firestoreInstance.doc(slashPath);
+  let ref = isDocPath(slashPath)
+    ? firestoreInstance.doc(slashPath)
+    : firestoreInstance.collection(slashPath);
 
   // Apply orderBy to query if it exists
   if (options?.orderBy && typeof ref.orderBy === 'function') {

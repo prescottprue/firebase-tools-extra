@@ -14,6 +14,7 @@ export default function databaseUpdateCommand(program: Command): void {
     )
     .option('-d, --data <data>', 'specify escaped JSON directly')
     .option('--emulator', 'use RTDB emulator')
+    .option('--debug', 'print verbose debug output to console')
     .action((dbPath, inFile, options) => {
       return rtdbWrite('update', dbPath, inFile, options)
         .then(() => process.exit(0))

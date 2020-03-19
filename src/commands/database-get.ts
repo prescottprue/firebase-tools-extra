@@ -13,7 +13,8 @@ export default function databaseGetCommand(program: Command): void {
     .description(
       'fetch and print JSON data at the specified path from database emulator',
     )
-    .option('--shallow', 'return shallow response')
+    // .option('--shallow', 'return shallow response')
+    .option('--pretty', 'pretty print response')
     .option('--order-by <key>', 'select a child key by which to order results')
     .option('--order-by-key', 'order by key name')
     .option('--order-by-value', 'order by primitive value')
@@ -32,7 +33,8 @@ export default function databaseGetCommand(program: Command): void {
       'restrict results to <val> (based on specified ordering)',
     )
     .option('--emulator', 'use RTDB emulator')
-    .action(async (dbPath: string, options?: any) => {
+    .option('--debug', 'print verbose debug output to console')
+    .action((dbPath: string, options?: any) => {
       return rtdbGet(dbPath, options)
         .then(() => process.exit(0))
         .catch(() => process.exit(1));
