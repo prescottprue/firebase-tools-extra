@@ -177,7 +177,7 @@ declare module "actions/firestore" {
 declare module "actions/rtdb" {
     export type RTDBWriteAction = 'set' | 'push' | 'update';
     /**
-     * Methods that are applicable on a ref for a get action
+     * Methods that are applicable on an RTDB ref for a get action
      */
     export interface RTDBQueryMethods {
         orderBy?: string;

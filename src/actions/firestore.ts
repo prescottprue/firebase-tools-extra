@@ -143,12 +143,14 @@ export async function firestoreWrite(
     actionPath,
     options,
   );
+
   // TODO: Support passing timestamps
 
   // Confirm ref has action as a method
-  if (!(ref as any)[action]) {
+  if (typeof (ref as any)[action] !== 'function') {
     // Otherwise throw error for ref not containg action
     const missingActionErr = `Ref at provided path "${actionPath}" does not have action "${action}"`;
+    error(missingActionErr);
     throw new Error(missingActionErr);
   }
 

@@ -10,17 +10,24 @@ import { error } from '../logger';
 export type RTDBWriteAction = 'set' | 'push' | 'update';
 
 /**
- * Methods that are applicable on a ref for a get action
+ * Methods that are applicable on an RTDB ref for a get action
  */
 export interface RTDBQueryMethods {
   /* select a child key by which to order results */
   orderBy?: string;
+  /* order by key name */
   orderByKey?: string;
+  /* order by primitive value */
   orderByValue?: string;
+  /* restrict results to <val> (based on specified ordering) */
   equalTo?: any;
+  /* start results at <val> (based on specified ordering) */
   startAt?: any;
+  /* end results at <val> (based on specified ordering) */
   endAt?: any;
+  /* limit to the first <num> results */
   limitToFirst?: number;
+  /* limit to the last <num> results */
   limitToLast?: number;
 }
 
@@ -95,24 +102,23 @@ export async function rtdbGet(
     // Write results to stdout to be loaded in tests
     // TODO: Support acutal shallow queries (may require Legacy token to use REST API)
     const dataToWrite = options?.shallow ? Object.keys(res.val()) : res.val();
-    if (dataToWrite) {
-      if (options?.output) {
-        // Write results to file at path provided in options.output
-        await writeFilePromise(
-          `${process.cwd()}/${options.output}`,
-          JSON.stringify(dataToWrite, null, 2),
-        );
-      } else {
-        // Write results to stdout (console.log was used instead of process.stdout.write so that newline is appended)
-        /* eslint-disable no-console */
-        console.log(
-          options?.pretty
-            ? JSON.stringify(dataToWrite, null, 2)
-            : JSON.stringify(dataToWrite),
-        );
-        /* eslint-enable no-console */
-      }
+    if (options?.output) {
+      // Write results to file at path provided in options.output
+      await writeFilePromise(
+        `${process.cwd()}/${options.output}`,
+        JSON.stringify(dataToWrite, null, 2),
+      );
+    } else {
+      // Write results to stdout (console.log was used instead of process.stdout.write so that newline is appended)
+      /* eslint-disable no-console */
+      console.log(
+        options?.pretty
+          ? JSON.stringify(dataToWrite, null, 2)
+          : JSON.stringify(dataToWrite),
+      );
+      /* eslint-enable no-console */
     }
+    return dataToWrite;
   } catch (err) {
     error(`Error with database:get at path "${actionPath}": `, err.message);
     throw err;
@@ -150,7 +156,8 @@ export async function rtdbWrite(
     const ref:
       | admin.database.Reference
       | admin.database.Query = fbInstance.database().ref(actionPath);
-    return (ref as any)[action](dataToWrite);
+    const res = await (ref as any)[action](dataToWrite);
+    return res;
   } catch (err) {
     error(
       `Error with database:${action} at path "${actionPath}": `,
@@ -173,10 +180,11 @@ export async function rtdbRemove(
   const fbInstance = initializeFirebase({ emulator, debug });
 
   try {
-    return fbInstance
+    const res = await fbInstance
       .database()
       .ref(actionPath)
       .remove();
+    return res;
   } catch (err) {
     error(`Error with database:remove at path "${actionPath}": `, err.message);
     throw err;
