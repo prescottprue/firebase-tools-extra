@@ -118,6 +118,7 @@ export async function rtdbGet(
       );
       /* eslint-enable no-console */
     }
+    return dataToWrite;
   } catch (err) {
     error(`Error with database:get at path "${actionPath}": `, err.message);
     throw err;
@@ -155,7 +156,8 @@ export async function rtdbWrite(
     const ref:
       | admin.database.Reference
       | admin.database.Query = fbInstance.database().ref(actionPath);
-    return (ref as any)[action](dataToWrite);
+    const res = await (ref as any)[action](dataToWrite);
+    return res;
   } catch (err) {
     error(
       `Error with database:${action} at path "${actionPath}": `,
@@ -178,10 +180,11 @@ export async function rtdbRemove(
   const fbInstance = initializeFirebase({ emulator, debug });
 
   try {
-    return fbInstance
+    const res = await fbInstance
       .database()
       .ref(actionPath)
       .remove();
+    return res;
   } catch (err) {
     error(`Error with database:remove at path "${actionPath}": `, err.message);
     throw err;
