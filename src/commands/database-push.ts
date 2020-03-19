@@ -13,6 +13,7 @@ export default function databasePushCommand(program: Command): void {
     .description('add a new JSON object to a list of data in your Firebase')
     .option('-d, --data <data>', 'specify escaped JSON directly')
     .option('--emulator', 'use RTDB emulator')
+    .option('--debug', 'print verbose debug output to console')
     .action((dbPath: string, inFile?: string, options?: any) => {
       return rtdbWrite('push', dbPath, inFile, options)
         .then(() => process.exit(0))

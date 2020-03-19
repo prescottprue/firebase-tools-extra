@@ -10,9 +10,10 @@ import { error } from '../logger';
 export type RTDBWriteAction = 'set' | 'push' | 'update';
 
 /**
- * Methods that are applicabale on a ref for a get action
+ * Methods that are applicable on a ref for a get action
  */
 export interface RTDBQueryMethods {
+  /* select a child key by which to order results */
   orderBy?: string;
   orderByKey?: string;
   orderByValue?: string;
@@ -28,9 +29,14 @@ export interface RTDBQueryMethods {
  */
 export interface RTDBGetOptions extends RTDBQueryMethods {
   shallow?: boolean;
+  /* pretty print response */
   pretty?: boolean;
+  /* save output to the specified file */
   output?: boolean;
+  /* use emulator */
   emulator?: boolean;
+  /* print verbose debug output to console */
+  debug?: boolean;
 }
 
 /**
@@ -76,7 +82,8 @@ export async function rtdbGet(
   actionPath: string,
   options?: RTDBGetOptions,
 ): Promise<any> {
-  const fbInstance = initializeFirebase({ emulator: options?.emulator });
+  const { emulator, debug } = options || {};
+  const fbInstance = initializeFirebase({ emulator, debug });
 
   try {
     const baseRef: admin.database.Reference = fbInstance
@@ -113,7 +120,8 @@ export async function rtdbGet(
 }
 
 /**
- * Write data to path of Real Time Database
+ * Write data to path of Real Time Database. Also works with server timestamps
+ * passed as {.sv: "timestamp"}.
  * @param action - Write action to run
  * @param actionPath - Path of action
  * @param filePath - Path of file to write to RTDB
@@ -125,17 +133,18 @@ export async function rtdbWrite(
   filePath?: string,
   options?: any,
 ): Promise<any> {
-  const fbInstance = initializeFirebase({ emulator: options?.emulator });
+  const { emulator, debug } = options || {};
+  const fbInstance = initializeFirebase({ emulator, debug });
+
   if (!filePath && !options?.data) {
     const errMsg = `File path or data is required to run ${action} at path "${actionPath}"`;
     error(errMsg);
     throw new Error(errMsg);
   }
+
   const dataToWrite = options?.data
     ? tryToJsonParse(options.data)
     : readJsonFile(filePath as string);
-
-  // TODO: Support parsing values to server timestamps (check if {.sv: "timestamp"} is auto converted)
 
   try {
     const ref:
@@ -160,7 +169,8 @@ export async function rtdbRemove(
   actionPath: string,
   options?: any,
 ): Promise<void> {
-  const fbInstance = initializeFirebase({ emulator: options?.emulator });
+  const { emulator, debug } = options || {};
+  const fbInstance = initializeFirebase({ emulator, debug });
 
   try {
     return fbInstance

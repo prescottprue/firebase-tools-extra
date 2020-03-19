@@ -102,6 +102,12 @@ declare module "utils" {
      */
     export function initializeFirebase(options?: InitOptions): admin.app.App;
     /**
+     * Check with or not a slash path is the path of a document
+     * @param slashPath - Path to check for whether or not it is a doc
+     * @returns Whether or not slash path is a document path
+     */
+    export function isDocPath(slashPath: string): boolean;
+    /**
      * Convert slash path to Firestore reference
      * @param firestoreInstance - Instance on which to
      * create ref
@@ -137,6 +143,7 @@ declare module "actions/firestore" {
         pretty?: boolean;
         output?: boolean;
         emulator?: boolean;
+        debug?: boolean;
     }
     /**
      * Get data from Firestore at given path (works for documents & collections)
@@ -157,6 +164,7 @@ declare module "actions/firestore" {
     interface FirestoreDeleteOptions {
         batchSize?: number;
         emulator?: boolean;
+        debug?: boolean;
     }
     /**
      * Delete data from Firestore
@@ -169,7 +177,7 @@ declare module "actions/firestore" {
 declare module "actions/rtdb" {
     export type RTDBWriteAction = 'set' | 'push' | 'update';
     /**
-     * Methods that are applicabale on a ref for a get action
+     * Methods that are applicable on a ref for a get action
      */
     export interface RTDBQueryMethods {
         orderBy?: string;
@@ -189,6 +197,7 @@ declare module "actions/rtdb" {
         pretty?: boolean;
         output?: boolean;
         emulator?: boolean;
+        debug?: boolean;
     }
     /**
      * Write data to path of Real Time Database
@@ -197,7 +206,8 @@ declare module "actions/rtdb" {
      */
     export function rtdbGet(actionPath: string, options?: RTDBGetOptions): Promise<any>;
     /**
-     * Write data to path of Real Time Database
+     * Write data to path of Real Time Database. Also works with server timestamps
+     * passed as {.sv: "timestamp"}.
      * @param action - Write action to run
      * @param actionPath - Path of action
      * @param filePath - Path of file to write to RTDB

@@ -34,6 +34,27 @@ export interface FirestoreGetOptions extends FirestoreQueryMethods {
   pretty?: boolean;
   output?: boolean;
   emulator?: boolean;
+  debug?: boolean;
+}
+
+/**
+ * Get data from Firestore get response (handles docs and collections).
+ * Returns null if no data is found at that location.
+ * @param res - Response from calling Firestore get
+ * @returns Data from response
+ */
+function firestoreDataFromResponse(res: any): any {
+  if (typeof res.data === 'function') {
+    return res.data() || null;
+  }
+  if (res.docs?.length) {
+    return res.docs.map((docSnap: admin.firestore.DocumentSnapshot) => ({
+      ...docSnap.data(),
+      // TODO: Look into if this should be __name__ for better imports and not colliding with real data
+      id: docSnap.id,
+    }));
+  }
+  return null;
 }
 
 /**
@@ -46,7 +67,8 @@ export async function firestoreGet(
   actionPath: string,
   options?: any,
 ): Promise<any> {
-  const fbInstance = initializeFirebase({ emulator: options?.emulator });
+  const { emulator, debug } = options || {};
+  const fbInstance = initializeFirebase({ emulator, debug });
 
   // Create ref from slash and any provided query options
   const ref = slashPathToFirestoreRef(
@@ -61,38 +83,27 @@ export async function firestoreGet(
 
     // Parse results for get action
     // Include id in doc if collection query
-    const dataToWrite =
-      typeof res.data === 'function'
-        ? res.data()
-        : res.docs &&
-          res.docs.map((docSnap: admin.firestore.DocumentSnapshot) => {
-            return {
-              ...docSnap.data(),
-              id: docSnap.id,
-            };
-          });
+    const dataToOutput = firestoreDataFromResponse(res);
 
     // Write results to stdout
-    if (dataToWrite) {
-      if (options?.output) {
-        // Write results to file at path provided in options.output
-        await writeFilePromise(
-          `${process.cwd()}/${options.output}`,
-          JSON.stringify(dataToWrite, null, 2),
-        );
-      } else {
-        // Write results to stdout (console.log was used instead of process.stdout.write so that newline is appended)
-        /* eslint-disable no-console */
-        console.log(
-          options?.pretty
-            ? JSON.stringify(dataToWrite, null, 2)
-            : JSON.stringify(dataToWrite),
-        );
-        /* eslint-enable no-console */
-      }
+    if (options?.output) {
+      // Write results to file at path provided in options.output
+      await writeFilePromise(
+        `${process.cwd()}/${options.output}`,
+        JSON.stringify(dataToOutput, null, 2),
+      );
+    } else {
+      // Write results to stdout (console.log is used instead of process.stdout.write so that newline is automatically appended)
+      /* eslint-disable no-console */
+      console.log(
+        options?.pretty
+          ? JSON.stringify(dataToOutput, null, 2)
+          : JSON.stringify(dataToOutput),
+      );
+      /* eslint-enable no-console */
     }
 
-    return dataToWrite;
+    return dataToOutput;
   } catch (err) {
     error(`Error with firestore:get at path "${actionPath}": `, err.message);
     throw err;
@@ -113,13 +124,15 @@ export async function firestoreWrite(
   filePath?: string,
   options?: any,
 ): Promise<any> {
-  const fbInstance = initializeFirebase({ emulator: options?.emulator });
+  const { emulator, debug } = options || {};
+  const fbInstance = initializeFirebase({ emulator, debug });
 
   if (!filePath && !options?.data) {
     const errMsg = `File path or data is required to run ${action} at path "${actionPath}"`;
     error(errMsg);
     throw new Error(errMsg);
   }
+
   const dataToWrite = options?.data
     ? tryToJsonParse(options.data)
     : readJsonFile(filePath as string);
@@ -150,8 +163,12 @@ export async function firestoreWrite(
 }
 
 interface FirestoreDeleteOptions {
+  /* Size of batch for delete (defaults to 200) */
   batchSize?: number;
+  /* Use emulator */
   emulator?: boolean;
+  /* print verbose debug output to console */
+  debug?: boolean;
 }
 
 /**
@@ -164,7 +181,8 @@ export async function firestoreDelete(
   actionPath: string,
   options?: FirestoreDeleteOptions,
 ): Promise<any> {
-  const fbInstance = initializeFirebase({ emulator: options?.emulator });
+  const { emulator, debug } = options || {};
+  const fbInstance = initializeFirebase({ emulator, debug });
 
   // Delete Firestore Collection or SubCollection
   if (actionPath.split('/').length % 2) {

@@ -14,7 +14,8 @@ export default function firestoreAddCommand(program: Command): void {
     )
     .option('-d, --data <data>', 'specify escaped JSON directly')
     .option('--emulator', 'use Firestore emulator')
-    .action((dbPath, inFile, options) => {
+    .option('--debug', 'print verbose debug output to console')
+    .action((dbPath: string, inFile?: string, options?: any) => {
       return firestoreWrite('add', dbPath, inFile, options)
         .then(() => process.exit(0))
         .catch(() => process.exit(1));

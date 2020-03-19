@@ -12,6 +12,7 @@ export default function databasePushCommand(program: Command): void {
     .command('database:remove <path>')
     .description('remove data from your Firebase at the specified path')
     .option('--emulator', 'use RTDB emulator')
+    .option('--debug', 'print verbose debug output to console')
     .action((dbPath: string, options?: any) => {
       return rtdbRemove(dbPath, options)
         .then(() => process.exit(0))
