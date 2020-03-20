@@ -317,10 +317,18 @@ interface InitOptions {
  * @param options
  */
 export function initializeFirebase(options?: InitOptions): admin.app.App {
+  // Return existing firebase-admin app instance
   if (fbInstance) {
     return fbInstance;
   }
-  // Use emulator if it exists in environment
+
+  // Return if init has already occured in firebase-admin
+  if (admin.apps.length !== 0) {
+    fbInstance = admin.apps[0] as any; // eslint-disable-line prefer-destructuring
+    return fbInstance;
+  }
+
+  // Use emulator if settings exists in environment or if emulator option is true
   if (
     process.env.FIRESTORE_EMULATOR_HOST ||
     process.env.FIREBASE_DATABASE_EMULATOR_HOST ||
@@ -375,12 +383,10 @@ export function initializeFirebase(options?: InitOptions): admin.app.App {
         admin.firestore().settings(firestoreSettings);
       }
     } catch (err) {
-      /* eslint-disable no-console */
       logger.error(
         'Error initializing firebase-admin instance with emulator settings.',
         err.message,
       );
-      /* eslint-enable no-console */
       throw err;
     }
   } else {

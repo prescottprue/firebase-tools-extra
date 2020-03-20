@@ -13,7 +13,7 @@ module.exports = {
     'import/resolver': {
       node: {
         moduleDirectory: ['node_modules', '/'],
-        extensions: [".js", ".jsx", ".ts", ".tsx"]
+        extensions: ['.js', '.jsx', '.ts', '.tsx']
       }
     }
   },
@@ -59,6 +59,27 @@ module.exports = {
             trailingComma: 'none', // airbnb
           }
         ]
+      }
+    },
+    {
+      files: ['test/unit/**/*.spec.ts'],
+      globals:{ 
+        sinon: true,
+        expect: true,
+        after: true,
+        afterEach: true,
+        before: true,
+        beforeEach: true,
+        it: true,
+        describe: true
+      },
+      plugins: [
+        'mocha',
+        'chai-friendly'
+      ],
+      rules: {
+        'no-unused-expressions': 0,
+        'chai-friendly/no-unused-expressions': 2
       }
     }
   ]

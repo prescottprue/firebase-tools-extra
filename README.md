@@ -36,17 +36,12 @@ firebase-extra database:get --limit-to-last 10 /users
 
 ## Tests
 
-Tests are currently not set up since they were causing timeouts when trying to shut down the emulator. They will be re-enabled once that is solved.
+To run all unit tests, run `yarn test`. This starts emulators, runs tests, then shuts down emulators.
 
-### Add back
+### Local Test Dev
 
-1. Install `yarn add -D concurrently wait-port ts-mocha chai mocha @types/mocha @types/expect @firebase/testing`
-1. Add the npm scripts:
-
-   ```json
-   "test:full": "concurrently \"npm run emulate\" \"wait-port -o silent 8080 && npm run test\"",
-   "test": "ts-mocha -p ./tsconfig.json test/**/*.spec.ts --exit",
-   ```
+1. Start emulators: `yarn emulate`
+1. Run tests and watch for changes: `yarn test:watch` (NOTE: if you don't want the file watcher on use `yarn test:base`)
 
 ## Why
 

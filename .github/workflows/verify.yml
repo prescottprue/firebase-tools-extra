@@ -38,5 +38,22 @@ jobs:
       - name: Check Lint
         run: yarn lint
 
+      - name: Run Unit Tests
+        run: yarn test
+
+      - name: Archive Firestore Emulator Debug Log
+        uses: actions/upload-artifact@v1
+        if: failure()
+        with:
+          name: firestore-debug
+          path: firestore-debug.log
+
+      - name: Archive RTDB Emulator Debug Log
+        uses: actions/upload-artifact@v1
+        if: failure()
+        with:
+          name: rtdb-debug
+          path: database-debug.log
+
       - name: Run Build
         run: yarn build
