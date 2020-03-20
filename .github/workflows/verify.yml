@@ -29,6 +29,17 @@ jobs:
           path: ${{ steps.yarn-cache.outputs.dir }}
           key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
 
+      - name: Get Library Versions For Binary Caching
+        id: dep-versions
+        run: |
+          echo "::set-output name=firebase-tools::$(cat package.json | jq -r '.devDependencies.\"firebase-tools\"')"
+
+      - name: Cache Firebase Emulator Binaries
+        uses: actions/cache@v1
+        with:
+          path: ~/.cache/firebase/emulators
+          key: ${{ runner.os }}-firebase-${{ steps.dep-versions.outputs.firebase-tools }}
+
       - name: Install Dependencies
         env:
           CI: true
