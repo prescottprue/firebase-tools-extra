@@ -32,7 +32,7 @@ jobs:
       - name: Get Library Versions For Binary Caching
         id: dep-versions
         run: |
-          echo "::set-output name=firebase-tools::$(cat package.json | jq -r '.devDependencies.\"firebase-tools\"')"
+          echo "::set-output name=firebase-tools::$(yarn info firebase-tools version --silent)"
 
       - name: Cache Firebase Emulator Binaries
         uses: actions/cache@v1
