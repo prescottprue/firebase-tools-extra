@@ -180,10 +180,7 @@ export async function rtdbRemove(
   const fbInstance = initializeFirebase({ emulator, debug });
 
   try {
-    const res = await fbInstance
-      .database()
-      .ref(actionPath)
-      .remove();
+    const res = await fbInstance.database().ref(actionPath).remove();
     return res;
   } catch (err) {
     error(`Error with database:remove at path "${actionPath}": `, err.message);
