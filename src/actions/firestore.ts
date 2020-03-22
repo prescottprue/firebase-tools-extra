@@ -196,10 +196,7 @@ export async function firestoreDelete(
   }
   try {
     // Call action with fixture data
-    const res = await fbInstance
-      .firestore()
-      .doc(actionPath)
-      .delete();
+    const res = await fbInstance.firestore().doc(actionPath).delete();
     return res;
   } catch (err) {
     error(`firestore:delete at path "${actionPath}": `, err.message);
