@@ -148,6 +148,7 @@ export async function rtdbWrite(
     throw new Error(errMsg);
   }
 
+  // TODO: Confirm data is not over firebase-admin's 16MB limit
   const dataToWrite = options?.data
     ? tryToJsonParse(options.data)
     : readJsonFile(filePath as string);

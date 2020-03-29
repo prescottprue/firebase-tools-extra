@@ -12,7 +12,7 @@ import { error } from '../logger';
 export type FirestoreAction = 'get' | 'set' | 'add' | 'update' | 'delete';
 
 /**
- * Methods that are applicabale on a ref for a get action
+ * Methods that are applicable on a ref for a get action
  */
 export interface FirestoreQueryMethods {
   orderBy?: string;
@@ -148,7 +148,7 @@ export async function firestoreWrite(
 
   // Confirm ref has action as a method
   if (typeof (ref as any)[action] !== 'function') {
-    // Otherwise throw error for ref not containg action
+    // Otherwise throw error for ref not containing action
     const missingActionErr = `Ref at provided path "${actionPath}" does not have action "${action}"`;
     error(missingActionErr);
     throw new Error(missingActionErr);

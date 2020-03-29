@@ -38,12 +38,6 @@ declare module "utils" {
     import { writeFile } from 'fs';
     export const writeFilePromise: typeof writeFile.__promisify__;
     /**
-     * Check whether a value is a string or not
-     * @param valToCheck - Value to check
-     * @returns Whether or not value is a string
-     */
-    export function isString(valToCheck: any): boolean;
-    /**
      * Get settings from firebaserc file
      * @param filePath - Path for file
      * @returns Firebase settings object
@@ -51,20 +45,10 @@ declare module "utils" {
     export function readJsonFile(filePath: string): any;
     /**
      * Parse fixture path string into JSON with error handling
-     * @param unparsed - Unparsed string to be parsed into JSON
+     * @param valueToParse - valueToParse string to be parsed into JSON
      * @returns Parsed fixture value or path
      */
-    export function tryToJsonParse(unparsed: any): any;
-    /**
-     * Get environment variable based on the current CI environment
-     * @param varNameRoot - variable name without the environment prefix
-     * @param envName - Environment option
-     * @returns Value of the environment variable
-     * @example
-     * envVarBasedOnCIEnv('FIREBASE_PROJECT_ID')
-     * // => 'fireadmin-stage' (value of 'STAGE_FIREBASE_PROJECT_ID' environment var)
-     */
-    export function envVarBasedOnCIEnv(varNameRoot: string, envName?: string): any;
+    export function tryToJsonParse(valueToParse: any): any;
     interface ServiceAccount {
         type: string;
         project_id: string;
@@ -79,16 +63,9 @@ declare module "utils" {
     }
     /**
      * Get service account from either local file or environment variables
-     * @param envSlug - Slug for current environment
      * @returns Service account object
      */
-    export function getServiceAccount(envSlug?: string): ServiceAccount;
-    /**
-     * Get service account from either local file or environment variables
-     * @param envSlug - Environment option
-     * @returns Service account object
-     */
-    export function getServiceAccountWithoutWarning(envSlug?: string): ServiceAccount | null;
+    export function getServiceAccount(): ServiceAccount | null;
     interface InitOptions {
         emulator?: boolean;
         debug?: boolean;
@@ -98,20 +75,14 @@ declare module "utils" {
      * serviceAccount.json or environment variables)
      *
      * @returns Initialized Firebase instance
-     * @param options
+     * @param options - Options object
      */
     export function initializeFirebase(options?: InitOptions): admin.app.App;
-    /**
-     * Check with or not a slash path is the path of a document
-     * @param slashPath - Path to check for whether or not it is a doc
-     * @returns Whether or not slash path is a document path
-     */
-    export function isDocPath(slashPath: string): boolean;
     /**
      * Convert slash path to Firestore reference
      * @param firestoreInstance - Instance on which to
      * create ref
-     * @param slashPath - Path to convert into firestore refernce
+     * @param slashPath - Path to convert into firestore reference
      * @param options - Options object
      * @returns Ref at slash path
      */
@@ -127,7 +98,7 @@ declare module "utils" {
 declare module "actions/firestore" {
     export type FirestoreAction = 'get' | 'set' | 'add' | 'update' | 'delete';
     /**
-     * Methods that are applicabale on a ref for a get action
+     * Methods that are applicable on a ref for a get action
      */
     export interface FirestoreQueryMethods {
         orderBy?: string;

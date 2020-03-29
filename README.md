@@ -2,6 +2,7 @@
 
 [![NPM version][npm-image]][npm-url]
 [![Build Status][build-status-image]][build-status-url]
+[![Coverage][coverage-image]][coverage-url]
 [![License][license-image]][license-url]
 [![Code Style][code-style-image]][code-style-url]
 
@@ -17,7 +18,7 @@ npm i --save-dev firebase-tools-extra
 
 1. Generate a service account from within the settings section of the Firebase console
 1. Save the service account to `serviceAccount.json` within your firebase project repo (or set `SERVICE_ACCOUNT` environment variable)
-1. Make sure you add `serviceAccount.json` to your `.gitignore` so it is not commited as part of your changes - **THIS IS EXTREMELY IMPORTANT**
+1. Make sure you add `serviceAccount.json` to your `.gitignore` so it is not committed as part of your changes - **THIS IS EXTREMELY IMPORTANT**
 
 To use with emulators:
 
@@ -56,10 +57,10 @@ MIT
 
 [npm-image]: https://img.shields.io/npm/v/firebase-tools-extra.svg?style=flat-square
 [npm-url]: https://npmjs.org/package/firebase-tools-extra
-[build-status-image]: https://img.shields.io/github/workflow/status/prescottprue/firebase-tools-extra/NPM%20Package%20Publish?style=flat-square
+[build-status-image]: https://img.shields.io/github/workflow/status/prescottprue/firebase-tools-extra/NPM%20Package%20Publish?style=flat-square&logo=github
 [build-status-url]: https://github.com/prescottprue/firebase-tools-extra/actions
-[climate-image]: https://img.shields.io/codeclimate/github/prescottprue/firebase-tools-extra.svg?style=flat-square
-[climate-url]: https://codeclimate.com/github/prescottprue/firebase-tools-extra
+[coverage-image]: https://img.shields.io/codecov/c/gh/prescottprue/firebase-tools-extra?style=flat-square&logo=codecov
+[coverage-url]: https://codecov.io/gh/prescottprue/firebase-tools-extra
 [license-image]: https://img.shields.io/npm/l/firebase-tools-extra.svg?style=flat-square
 [license-url]: https://github.com/prescottprue/firebase-tools-extra/blob/master/LICENSE
 [code-style-image]: https://img.shields.io/badge/code%20style-standard-brightgreen.svg?style=flat-square

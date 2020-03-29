@@ -67,3 +67,12 @@ jobs:
 
       - name: Run Build
         run: yarn build
+
+      - name: Upload Coverage
+        if: success()
+        env:
+          CI: true
+          CODE_COV: ${{ secrets.CODE_COV }}
+        # Upload to codecov.io. Curl used in place of codecov/codecov-action
+        # due to long build time. See https://github.com/codecov/codecov-action/issues/21
+        run: curl -s https://codecov.io/bash | bash -s -- -t $CODE_COV
