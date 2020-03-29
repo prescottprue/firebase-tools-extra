@@ -14,7 +14,8 @@ describe('firestoreAction', () => {
   });
 
   describe('set action', () => {
-    it('sets data to Firestore database', async () => {
+    it('sets data to Firestore database', async function () {
+      this.timeout(3000);
       const collection = 'first';
       await firestoreWrite('set', `${collection}/item`, '', {
         data: { some: 'data' },
