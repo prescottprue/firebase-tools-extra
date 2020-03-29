@@ -2,6 +2,7 @@
 
 [![NPM version][npm-image]][npm-url]
 [![Build Status][build-status-image]][build-status-url]
+[![Coverage][coverage-image]][coverage-url]
 [![License][license-image]][license-url]
 [![Code Style][code-style-image]][code-style-url]
 
@@ -17,11 +18,13 @@ npm i --save-dev firebase-tools-extra
 
 1. Generate a service account from within the settings section of the Firebase console
 1. Save the service account to `serviceAccount.json` within your firebase project repo (or set `SERVICE_ACCOUNT` environment variable)
-1. Make sure you add `serviceAccount.json` to your `.gitignore` so it is not commited as part of your changes - **THIS IS EXTREMELY IMPORTANT**
+1. Make sure you add `serviceAccount.json` to your `.gitignore` so it is not committed as part of your changes - **THIS IS EXTREMELY IMPORTANT**
 
 To use with emulators:
 
-1. Set `FIREBASE_DATABASE_EMULATOR_HOST` and `FIRESTORE_EMULATOR_HOST` variabes to your environment
+1. Do one of the following:
+   - Pass the `--emulator` flag along with your command
+   - Set `FIREBASE_DATABASE_EMULATOR_HOST` and `FIRESTORE_EMULATOR_HOST` variabes to your environment
 1. Use firebase-tools-extra the same way you would firebase-tools: `firebase-extra database:get /users`
 
 ## Usage
@@ -34,24 +37,19 @@ firebase-extra database:get --limit-to-last 10 /users
 
 ## Tests
 
-Tests are currently not set up since they were causing timeouts when trying to shut down the emulator. They will be re-enabled once that is solved.
+To run all unit tests, run `yarn test`. This starts emulators, runs tests, then shuts down emulators.
 
-### Add back
+### Local Test Dev
 
-1. Install `yarn add -D concurrently wait-port ts-mocha chai mocha @types/mocha @types/expect @firebase/testing`
-1. Add the npm scripts:
-
-   ```json
-   "test:full": "concurrently \"npm run emulate\" \"wait-port -o silent 8080 && npm run test\"",
-   "test": "ts-mocha -p ./tsconfig.json test/**/*.spec.ts --exit",
-   ```
+1. Start emulators: `yarn emulate`
+1. Run tests and watch for changes: `yarn test:watch` (NOTE: if you don't want the file watcher on use `yarn test:base`)
 
 ## Why
 
 firebase-tools does not have the following:
 
-- support for emulators ([feature request here](https://github.com/firebase/firebase-tools/issues/1957))
-- full Firestore interactions including `get`, `set`, and `update`
+- support for emulators ([feature request to add this to `firebase-tools`](https://github.com/firebase/firebase-tools/issues/1957))
+- full Firestore interactions including `get`, `add`, `set`, and `update`
 
 ## License
 
@@ -59,10 +57,10 @@ MIT
 
 [npm-image]: https://img.shields.io/npm/v/firebase-tools-extra.svg?style=flat-square
 [npm-url]: https://npmjs.org/package/firebase-tools-extra
-[build-status-image]: https://img.shields.io/github/workflow/status/prescottprue/firebase-tools-extra/NPM%20Package%20Publish?style=flat-square
+[build-status-image]: https://img.shields.io/github/workflow/status/prescottprue/firebase-tools-extra/NPM%20Package%20Publish?style=flat-square&logo=github
 [build-status-url]: https://github.com/prescottprue/firebase-tools-extra/actions
-[climate-image]: https://img.shields.io/codeclimate/github/prescottprue/firebase-tools-extra.svg?style=flat-square
-[climate-url]: https://codeclimate.com/github/prescottprue/firebase-tools-extra
+[coverage-image]: https://img.shields.io/codecov/c/gh/prescottprue/firebase-tools-extra?style=flat-square&logo=codecov
+[coverage-url]: https://codecov.io/gh/prescottprue/firebase-tools-extra
 [license-image]: https://img.shields.io/npm/l/firebase-tools-extra.svg?style=flat-square
 [license-url]: https://github.com/prescottprue/firebase-tools-extra/blob/master/LICENSE
 [code-style-image]: https://img.shields.io/badge/code%20style-standard-brightgreen.svg?style=flat-square

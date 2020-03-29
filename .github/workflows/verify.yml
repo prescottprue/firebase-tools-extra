@@ -6,14 +6,17 @@ jobs:
   build:
     name: Build
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [10.x, 12.x]
     steps:
       - name: Checkout code
-        uses: actions/checkout@v1
+        uses: actions/checkout@v2
 
-      - name: Setup Node
+      - name: Use Node.js ${{ matrix.node-version }} on ${{ matrix.os }}
         uses: actions/setup-node@v1
         with:
-          node-version: 12
+          node-version: ${{ matrix.node-version }}
 
       - name: Get yarn cache
         id: yarn-cache
@@ -25,6 +28,17 @@ jobs:
           path: ${{ steps.yarn-cache.outputs.dir }}
           key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
 
+      - name: Get Library Versions For Binary Caching
+        id: dep-versions
+        run: |
+          echo "::set-output name=firebase-tools::$(yarn info firebase-tools version --silent)"
+
+      - name: Cache Firebase Emulator Binaries
+        uses: actions/cache@v1
+        with:
+          path: ~/.cache/firebase/emulators
+          key: ${{ runner.os }}-firebase-${{ steps.dep-versions.outputs.firebase-tools }}
+
       - name: Install Dependencies
         env:
           CI: true
@@ -34,5 +48,31 @@ jobs:
       - name: Check Lint
         run: yarn lint
 
+      - name: Run Unit Tests
+        run: yarn test
+
+      - name: Archive Firestore Emulator Debug Log
+        uses: actions/upload-artifact@v1
+        if: failure()
+        with:
+          name: firestore-debug
+          path: firestore-debug.log
+
+      - name: Archive RTDB Emulator Debug Log
+        uses: actions/upload-artifact@v1
+        if: failure()
+        with:
+          name: rtdb-debug
+          path: database-debug.log
+
       - name: Run Build
         run: yarn build
+
+      - name: Upload Coverage
+        if: success()
+        env:
+          CI: true
+          CODE_COV: ${{ secrets.CODE_COV }}
+        # Upload to codecov.io. Curl used in place of codecov/codecov-action
+        # due to long build time. See https://github.com/codecov/codecov-action/issues/21
+        run: curl -s https://codecov.io/bash | bash -s -- -t $CODE_COV

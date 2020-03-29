@@ -13,7 +13,7 @@ module.exports = {
     'import/resolver': {
       node: {
         moduleDirectory: ['node_modules', '/'],
-        extensions: [".js", ".jsx", ".ts", ".tsx"]
+        extensions: ['.js', '.jsx', '.ts', '.tsx']
       }
     }
   },
@@ -23,16 +23,27 @@ module.exports = {
   },
   rules: {
     '@typescript-eslint/no-explicit-any': 0,
-    'comma-dangle': [2, 'never'],
+    'import/prefer-default-export': 0,
     'no-shadow': 0,
+    'consistent-return': 0,
     'no-new': 0,
     'new-cap': 0,
-    'max-len': 0,
     'no-return-await': 2,
+    'jsdoc/newline-after-description': 0,
+    'jsdoc/require-returns-type': 0,
+    'jsdoc/require-param-type': 0,
     'import/extensions': 0,
     'jsdoc/newline-after-description': 0,
     'jsdoc/require-returns-type': 0,
     'jsdoc/require-param-type': 0,
+    'no-undef': 0, // handled by typescript noUnusedLocals: true option
+    'prettier/prettier': [
+      'error',
+      {
+        singleQuote: true, // airbnb
+        trailingComma: 'all', // airbnb
+      }
+    ]
   },
   overrides: [
     {
@@ -48,6 +59,28 @@ module.exports = {
             trailingComma: 'none', // airbnb
           }
         ]
+      }
+    },
+    {
+      files: ['test/unit/**/*.spec.ts'],
+      globals:{ 
+        sinon: true,
+        expect: true,
+        after: true,
+        afterEach: true,
+        before: true,
+        beforeEach: true,
+        it: true,
+        describe: true
+      },
+      plugins: [
+        'mocha',
+        'chai-friendly'
+      ],
+      rules: {
+        'no-unused-expressions': 0,
+        'chai-friendly/no-unused-expressions': 2,
+        'func-names': 0
       }
     }
   ]
