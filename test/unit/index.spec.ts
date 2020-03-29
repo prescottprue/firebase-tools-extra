@@ -9,17 +9,17 @@ const adminApp = firebase.initializeAdminApp({
 
 describe('firestoreAction', () => {
   after(async () => {
-    await firebase.clearFirestoreData({
-      projectId: process.env.GCLOUD_PROJECT || 'test-project',
-    });
     // Cleanup all apps (keeps active listeners from preventing JS from exiting)
     await Promise.all(firebase.apps().map((app) => app.delete()));
   });
 
   describe('set action', () => {
     it('sets data to Firestore database', async () => {
-      await firestoreWrite('set', 'test/item', '', { data: { some: 'data' } });
-      const docRes = await adminApp.firestore().doc('test/item').get();
+      const collection = 'first';
+      await firestoreWrite('set', `${collection}/item`, '', {
+        data: { some: 'data' },
+      });
+      const docRes = await adminApp.firestore().doc(`${collection}/item`).get();
       expect(docRes.exists).to.equal(true);
     });
   });
@@ -27,9 +27,10 @@ describe('firestoreAction', () => {
   describe('get action', () => {
     it('gets data from a Firestore document', async () => {
       const testData = { some: 'data2' };
+      const collection = 'another';
       // Write data to firestore
-      await adminApp.firestore().doc('test/item').set(testData);
-      const res = await firestoreGet('test/item');
+      await adminApp.firestore().doc(`${collection}/item`).set(testData);
+      const res = await firestoreGet(`${collection}/item`);
       expect(res.some).to.equal(testData.some);
     });
 
@@ -39,7 +40,6 @@ describe('firestoreAction', () => {
       await adminApp.firestore().doc('test/item').set(testData);
       const res = await firestoreGet('test');
       expect(res[0]).to.have.property('some', testData.some);
-      expect(res.length).to.equal(1);
     });
   });
 });
