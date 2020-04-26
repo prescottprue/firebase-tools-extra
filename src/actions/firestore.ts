@@ -1,11 +1,21 @@
 import * as admin from 'firebase-admin';
 import {
+  readdirSync,
+  readFileSync,
+  writeFileSync,
+  existsSync,
+  mkdirSync,
+} from 'fs';
+import {
   slashPathToFirestoreRef,
   initializeFirebase,
   deleteFirestoreCollection,
   readJsonFile,
   writeFilePromise,
   tryToJsonParse,
+  typedJSONToObject,
+  objectToTypedJSON,
+  promiseWaterfall,
 } from '../utils';
 import { error } from '../logger';
 
@@ -200,6 +210,132 @@ export async function firestoreDelete(
     return res;
   } catch (err) {
     error(`firestore:delete at path "${actionPath}": `, err.message);
+    throw err;
+  }
+}
+
+/**
+ * @param fbInstance - Firebase instance
+ * @param collectionFolderPath - Path of collection folder
+ * @param parentFolderPath - Path of parent folder
+ */
+async function importCollectionFromFiles(
+  fbInstance: admin.app.App,
+  collectionFolderPath: string,
+  parentFolderPath: string,
+): Promise<any> {
+  const batch = fbInstance.firestore().batch();
+  const docFiles = readdirSync(collectionFolderPath);
+  docFiles.forEach((docFileName) => {
+    const fileContentsBuffer = readFileSync(
+      `${collectionFolderPath}/${docFileName}`,
+    );
+    const fileContents = fileContentsBuffer.toString();
+    if (!fileContents) {
+      /* eslint-disable no-console */
+      console.log(
+        'No file contents in',
+        `${collectionFolderPath}/${docFileName}`,
+      );
+      return;
+    }
+    /* eslint-enable no-console */
+    const fileObject = JSON.parse(fileContents);
+    batch.set(
+      fbInstance
+        .firestore()
+        .doc(
+          `${collectionFolderPath.replace(
+            parentFolderPath,
+            '',
+          )}/${docFileName.replace('.json', '')}`,
+        ),
+      typedJSONToObject(fileObject),
+    );
+  });
+  await batch.commit();
+}
+
+/**
+ * @param importFolderPath - Path from which to import Firestore data
+ * @param options - Options for import
+ */
+export async function firestoreImport(
+  importFolderPath: string,
+  options?: FirestoreDeleteOptions,
+): Promise<any> {
+  const { emulator, debug } = options || {};
+  const fbInstance = initializeFirebase({ emulator, debug });
+
+  const collectionFolders = readdirSync(importFolderPath);
+  try {
+    // Call action with fixture data
+    await promiseWaterfall(
+      collectionFolders.map((docFileName: string) =>
+        importCollectionFromFiles(
+          fbInstance,
+          `${importFolderPath}/${docFileName}`,
+          importFolderPath,
+        ),
+      ),
+    );
+    /* eslint-disable no-console */
+    console.log(
+      `Successfully imported ${collectionFolders.length} collections`,
+    );
+    /* eslint-disable no-console */
+  } catch (err) {
+    error(`firestore:import at path "${importFolderPath}": `, err.message);
+    throw err;
+  }
+}
+
+/**
+ * @param collectionReference - Reference for collection
+ * @param parentFolderPath - Parent folder path
+ */
+async function exportCollectionFromFiles(
+  collectionReference: admin.firestore.CollectionReference,
+  parentFolderPath: string,
+): Promise<any> {
+  const collectionSnap = await collectionReference.get();
+  collectionSnap.docs.forEach((docSnap: any) => {
+    const mapped = objectToTypedJSON(docSnap.data());
+    const folderPath = `${parentFolderPath}/${collectionReference.id}`;
+    if (!existsSync(folderPath)) {
+      mkdirSync(folderPath);
+    }
+    writeFileSync(
+      `${folderPath}/${docSnap.id}.json`,
+      JSON.stringify(mapped, null, 2),
+    );
+  });
+}
+
+/**
+ * @param exportFolderPath - Path of folder to export Firestore contents to
+ * @param options - Options for export
+ */
+export async function firestoreExport(
+  exportFolderPath: string,
+  options?: any,
+): Promise<any> {
+  const { debug } = options || {};
+  const fbInstance = initializeFirebase({ debug });
+  if (!existsSync(exportFolderPath)) {
+    mkdirSync(exportFolderPath);
+  }
+  try {
+    const collections = await fbInstance.firestore().listCollections();
+    console.log(`Exporting ${collections.length} collections`); // eslint-disable-line no-console
+    await promiseWaterfall(
+      collections.map((collectionRef: admin.firestore.CollectionReference) =>
+        exportCollectionFromFiles(collectionRef, exportFolderPath),
+      ),
+    );
+    console.log(`Successfully exported ${collections.length} collections`); // eslint-disable-line no-console
+  } catch (err) {
+    error(`firestore:export at path "${exportFolderPath}": `, err.message);
     throw err;
   }
 }

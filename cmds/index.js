@@ -21,6 +21,8 @@ module.exports = function setupCommands(client) {
   client.firestoreAdd = loadCommand('firestore-add');
   client.firestoreSet = loadCommand('firestore-set');
   client.firestoreUpdate = loadCommand('firestore-update');
+  client.firestoreImport = loadCommand('firestore-import');
+  client.firestoreExport = loadCommand('firestore-export');
 
   return client;
 };

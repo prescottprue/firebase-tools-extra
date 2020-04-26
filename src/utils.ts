@@ -404,3 +404,148 @@ export function deleteFirestoreCollection(
     deleteQueryBatch(firestoreInstance, query, resolve, reject);
   });
 }
+
+/**
+ * Run promises in a waterfall instead of all the same time (Promise.all)
+ * @param {Array} callbacks - List of promises to run in order
+ * @returns {Promise} Resolves when all promises have completed in order
+ */
+export function promiseWaterfall(callbacks: any[]): Promise<any[]> {
+  return callbacks.reduce(
+    (accumulator: any, callback: any) =>
+      accumulator.then(
+        typeof callback === 'function' ? callback : (): any => callback,
+      ),
+    Promise.resolve(),
+  );
+}
+
+/**
+ * Converts a JSON object into data to be written to Firestore
+ * @param {object} data An exported object property from `firestore-backup-restore`
+ * @returns {object} JSON object representing Firestore data
+ */
+export function typedJSONToObject(data: any): any {
+  return data
+    ? Object.keys(data).reduce((acc, key) => {
+        const prop = data[key];
+        switch (prop.type) {
+          case 'object':
+            (acc as any)[key] = typedJSONToObject(prop.value);
+            break;
+          case 'geopoint':
+            (acc as any)[key] = new admin.firestore.GeoPoint(
+              prop.value?._latitude,
+              prop.value?._longitude,
+            );
+            break;
+          case 'timestamp':
+            (acc as any)[key] = new admin.firestore.Timestamp(
+              prop.value?._seconds,
+              prop.value?._nanoseconds,
+            );
+            break;
+          case 'array':
+            (acc as any)[key] = typedJSONToArray(prop.value); // eslint-disable-line @typescript-eslint/no-use-before-define
+            break;
+          default:
+            (acc as any)[key] = prop.value;
+            break;
+        }
+        return acc;
+      }, {})
+    : null;
+}
+
+/**
+ * Converts an array 'property' exported via `firestore-backup-restore` to a JS
+ * object.
+ * @param {Array} data An exported array property from `firestore-backup-restore`
+ * @returns {object} JSON object representing Firestore data
+ */
+export function typedJSONToArray(data: any): any[] {
+  return (
+    data &&
+    data.reduce((acc: any, item: any) => {
+      switch (item.type) {
+        case 'object':
+          acc.push(typedJSONToObject(item.value));
+          break;
+        case 'array':
+          acc.push(typedJSONToArray(item.value));
+          break;
+        default:
+          acc.push(item.value);
+          break;
+      }
+
+      return acc;
+    }, [])
+  );
+}
+
+/**
+ * Returns the JS type of a given value.
+ * @param {any} value - Value to get type of
+ * @returns {string} String representing the type of an item
+ */
+function typeStr(value: any): string {
+  if (Array.isArray(value)) {
+    return 'array';
+  }
+  if (typeof value === 'object' && value?._nanoseconds && value?._seconds) {
+    return 'timestamp';
+  }
+  if (typeof value === 'object' && value?.latitude && value?.longitude) {
+    return 'geopoint';
+  }
+  return typeof value;
+}
+
+/**
+ * Convert a JS object to a JSON object that includes type information.
+ * @param {object} obj - Object to convert to typed JSON
+ * @returns {Array} Object with typed values
+ */
+export function objectToTypedJSON(obj: any): any {
+  return obj
+    ? Object.keys(obj).reduce((acc, key) => {
+        const value = obj[key];
+        const type = typeStr(value);
+        switch (type) {
+          case 'object':
+            (acc as any)[key] = { value: objectToTypedJSON(value), type };
+            break;
+          case 'array':
+            (acc as any)[key] = { value: arrayToTypedJSON(value), type }; // eslint-disable-line @typescript-eslint/no-use-before-define
+            break;
+          default:
+            (acc as any)[key] = { value, type };
+            break;
+        }
+        return acc;
+      }, {})
+    : null;
+}
+
+/**
+ * Convert a JS array to a JSON array that includes type information.
+ * @param {Array} arr - Array to add type information to
+ * @returns {Array} Array with typed info
+ */
+export function arrayToTypedJSON(arr: any): any[] {
+  return arr.reduce((acc: any, value: any) => {
+    const type = typeStr(value);
+    switch (type) {
+      case 'object':
+        arr.push({ value: objectToTypedJSON(value), type });
+        break;
+      case 'array':
+        arr.push({ value: arrayToTypedJSON(value), type });
+        break;
+      default:
+        acc.push({ value, type });
+    }
+    return acc;
+  }, []);
+}

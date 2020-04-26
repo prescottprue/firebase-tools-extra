@@ -94,6 +94,37 @@ declare module "utils" {
      * @returns Promise which resolves when collection has been deleted
      */
     export function deleteFirestoreCollection(firestoreInstance: any, collectionPath: string, batchSize?: number): Promise<any>;
+    /**
+     * Run promises in a waterfall instead of all the same time (Promise.all)
+     * @param {Array} callbacks - List of promises to run in order
+     * @returns {Promise} Resolves when all promises have completed in order
+     */
+    export function promiseWaterfall(callbacks: any[]): Promise<any[]>;
+    /**
+     * Converts a JSON object into data to be written to Firestore
+     * @param {object} data An exported object property from `firestore-backup-restore`
+     * @returns {object} JSON object representing Firestore data
+     */
+    export function typedJSONToObject(data: any): any;
+    /**
+     * Converts an array 'property' exported via `firestore-backup-restore` to a JS
+     * object.
+     * @param {Array} data An exported array property from `firestore-backup-restore`
+     * @returns {object} JSON object representing Firestore data
+     */
+    export function typedJSONToArray(data: any): any[];
+    /**
+     * Convert a JS object to a JSON object that includes type information.
+     * @param {object} obj - Object to convert to typed JSON
+     * @returns {Array} Object with typed values
+     */
+    export function objectToTypedJSON(obj: any): any;
+    /**
+     * Convert a JS array to a JSON array that includes type information.
+     * @param {Array} arr - Array to add type information to
+     * @returns {Array} Array with typed info
+     */
+    export function arrayToTypedJSON(arr: any): any[];
 }
 declare module "actions/firestore" {
     export type FirestoreAction = 'get' | 'set' | 'add' | 'update' | 'delete';
@@ -144,6 +175,16 @@ declare module "actions/firestore" {
      * @returns Action within Firestore
      */
     export function firestoreDelete(actionPath: string, options?: FirestoreDeleteOptions): Promise<any>;
+    /**
+     * @param importFolderPath - Path from which to import Firestore data
+     * @param options - Options for import
+     */
+    export function firestoreImport(importFolderPath: string, options?: FirestoreDeleteOptions): Promise<any>;
+    /**
+     * @param exportFolderPath - Path of folder to export Firestore contents to
+     * @param options - Options for export
+     */
+    export function firestoreExport(exportFolderPath: string, options?: any): Promise<any>;
 }
 declare module "actions/rtdb" {
     export type RTDBWriteAction = 'set' | 'push' | 'update';
@@ -259,6 +300,15 @@ declare module "commands/firestore-delete" {
      */
     export default function firestoreDeleteCommand(program: Command): void;
 }
+declare module "commands/firestore-export" {
+    import { Command } from 'commander';
+    /**
+     * @name databaseGet
+     * fetch and print JSON data at the specified path from database emulator
+     * @param {object} program - Commander program
+     */
+    export default function databaseGetCommand(program: Command): void;
+}
 declare module "commands/firestore-get" {
     import { Command } from 'commander';
     /**
@@ -267,6 +317,15 @@ declare module "commands/firestore-get" {
      * @param {object} program - Commander program
      */
     export default function firestoreGetCommand(program: Command): void;
+}
+declare module "commands/firestore-import" {
+    import { Command } from 'commander';
+    /**
+     * @name databaseGet
+     * fetch and print JSON data at the specified path from database emulator
+     * @param {object} program - Commander program
+     */
+    export default function databaseGetCommand(program: Command): void;
 }
 declare module "commands/firestore-set" {
     import { Command } from 'commander';
