@@ -175,16 +175,26 @@ declare module "actions/firestore" {
      * @returns Action within Firestore
      */
     export function firestoreDelete(actionPath: string, options?: FirestoreDeleteOptions): Promise<any>;
+    interface FirestoreImportOptions {
+        emulator?: boolean;
+        debug?: boolean;
+    }
     /**
      * @param importFolderPath - Path from which to import Firestore data
      * @param options - Options for import
      */
-    export function firestoreImport(importFolderPath: string, options?: FirestoreDeleteOptions): Promise<any>;
+    export function firestoreImport(importFolderPath: string, options?: FirestoreImportOptions): Promise<any>;
+    interface FirestoreExportOptions {
+        collections?: string[];
+        ignoreCollections?: string[];
+        emulator?: boolean;
+        debug?: boolean;
+    }
     /**
      * @param exportFolderPath - Path of folder to export Firestore contents to
      * @param options - Options for export
      */
-    export function firestoreExport(exportFolderPath: string, options?: any): Promise<any>;
+    export function firestoreExport(exportFolderPath: string, options?: FirestoreExportOptions): Promise<any>;
 }
 declare module "actions/rtdb" {
     export type RTDBWriteAction = 'set' | 'push' | 'update';
@@ -303,11 +313,12 @@ declare module "commands/firestore-delete" {
 declare module "commands/firestore-export" {
     import { Command } from 'commander';
     /**
-     * @name databaseGet
-     * fetch and print JSON data at the specified path from database emulator
+     * @name firestoreExport
+     * Export data from Firestore instance (either hosted or emulator). Stores
+     * type information for use with firebase:import command.
      * @param {object} program - Commander program
      */
-    export default function databaseGetCommand(program: Command): void;
+    export default function firestoreExportCommand(program: Command): void;
 }
 declare module "commands/firestore-get" {
     import { Command } from 'commander';

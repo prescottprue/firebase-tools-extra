@@ -256,17 +256,23 @@ async function importCollectionFromFiles(
   await batch.commit();
 }
 
+interface FirestoreImportOptions {
+  /* Use emulator */
+  emulator?: boolean;
+  /* print verbose debug output to console */
+  debug?: boolean;
+}
+
 /**
  * @param importFolderPath - Path from which to import Firestore data
  * @param options - Options for import
  */
 export async function firestoreImport(
   importFolderPath: string,
-  options?: FirestoreDeleteOptions,
+  options?: FirestoreImportOptions,
 ): Promise<any> {
   const { emulator, debug } = options || {};
   const fbInstance = initializeFirebase({ emulator, debug });
-
   const collectionFolders = readdirSync(importFolderPath);
   try {
     // Call action with fixture data
@@ -312,22 +318,50 @@ async function exportCollectionFromFiles(
   });
 }
 
+interface FirestoreExportOptions {
+  collections?: string[];
+  ignoreCollections?: string[];
+  /* Use emulator */
+  emulator?: boolean;
+  /* print verbose debug output to console */
+  debug?: boolean;
+}
+
 /**
  * @param exportFolderPath - Path of folder to export Firestore contents to
  * @param options - Options for export
  */
 export async function firestoreExport(
   exportFolderPath: string,
-  options?: any,
+  options?: FirestoreExportOptions,
 ): Promise<any> {
   const { debug } = options || {};
   const fbInstance = initializeFirebase({ debug });
+
   if (!existsSync(exportFolderPath)) {
     mkdirSync(exportFolderPath);
   }
   try {
-    const collections = await fbInstance.firestore().listCollections();
-    console.log(`Exporting ${collections.length} collections`); // eslint-disable-line no-console
+    // Covert list of provided collections to an array of refs (if passed)
+    let collections =
+      options?.collections &&
+      options.collections.map((collectionName) =>
+        admin.firestore().collection(collectionName),
+      );
+    // Load collections from DB if list is not provided
+    if (!collections) {
+      const allCollections = await fbInstance.firestore().listCollections();
+      collections = options?.ignoreCollections
+        ? allCollections.filter((collectionRef) => {
+            return !(options.ignoreCollections as string[]).includes(
+              collectionRef.id,
+            );
+          })
+        : allCollections;
+    }
+    console.log(
+      `Exporting collections: ${collections.map(({ id }) => id).join(', ')}`,
+    ); // eslint-disable-line no-console
     await promiseWaterfall(
       collections.map((collectionRef: admin.firestore.CollectionReference) =>
         exportCollectionFromFiles(collectionRef, exportFolderPath),
